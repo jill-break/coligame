@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-chess-board"></i> Board Games
+    </h2>
+    
+    <div class="row">
+        <!-- Chess -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-chess"></i> Chess
+                    </h5>
+                    <p class="card-text">
+                        Classic strategy game where you try to checkmate your opponent's king.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('chess') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='chess') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkers -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-chess-board"></i> Checkers
+                    </h5>
+                    <p class="card-text">
+                        Move diagonally and capture opponent's pieces to become king.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('checkers') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='checkers') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tic Tac Toe -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-times-circle"></i> Tic Tac Toe
+                    </h5>
+                    <p class="card-text">
+                        Classic game of X's and O's. Get three in a row to win!
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('tic_tac_toe') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='tic_tac_toe') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

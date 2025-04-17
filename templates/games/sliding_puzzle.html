@@ -1,0 +1,283 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="game-controls mb-3">
+        <button class="btn btn-primary" id="newGame">
+            <i class="fas fa-redo"></i> New Game
+        </button>
+        <div class="difficulty-controls">
+            <select id="difficulty" class="form-select d-inline-block w-auto">
+                <option value="3">3x3 (Easy)</option>
+                <option value="4">4x4 (Medium)</option>
+                <option value="5">5x5 (Hard)</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="game-area">
+        <div id="puzzleBoard" class="puzzle-board">
+            <!-- Puzzle tiles will be added here -->
+        </div>
+    </div>
+    
+    <div class="game-info mt-3">
+        <span>Moves: <span id="moveCount">0</span></span>
+        <span>Time: <span id="timeElapsed">0:00</span></span>
+        <span>Best Time: <span id="bestTime">-</span></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+class SlidingPuzzle {
+    constructor() {
+        this.size = 3;
+        this.board = [];
+        this.emptyTile = { x: 0, y: 0 };
+        this.moveCount = 0;
+        this.startTime = null;
+        this.timer = null;
+        this.bestTimes = {
+            3: null,
+            4: null,
+            5: null
+        };
+        this.setupEventListeners();
+        this.newGame();
+    }
+    
+    setupEventListeners() {
+        document.getElementById('newGame').addEventListener('click', () => this.newGame());
+        document.getElementById('difficulty').addEventListener('change', () => this.newGame());
+    }
+    
+    newGame() {
+        this.size = parseInt(document.getElementById('difficulty').value);
+        this.moveCount = 0;
+        document.getElementById('moveCount').textContent = '0';
+        this.initializeBoard();
+        this.shuffleBoard();
+        this.updateDisplay();
+        this.startTimer();
+    }
+    
+    initializeBoard() {
+        this.board = [];
+        for (let y = 0; y < this.size; y++) {
+            this.board[y] = [];
+            for (let x = 0; x < this.size; x++) {
+                this.board[y][x] = y * this.size + x + 1;
+            }
+        }
+        // Set the last tile as empty (0)
+        this.board[this.size - 1][this.size - 1] = 0;
+        this.emptyTile = { x: this.size - 1, y: this.size - 1 };
+    }
+    
+    shuffleBoard() {
+        // Perform random valid moves to shuffle the board
+        const moves = 1000;
+        for (let i = 0; i < moves; i++) {
+            const validMoves = this.getValidMoves();
+            const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+            this.moveTile(randomMove.x, randomMove.y);
+        }
+        
+        // Ensure the puzzle is solvable
+        if (!this.isSolvable()) {
+            // Swap two adjacent tiles to make it solvable
+            const temp = this.board[0][0];
+            this.board[0][0] = this.board[0][1];
+            this.board[0][1] = temp;
+        }
+    }
+    
+    getValidMoves() {
+        const moves = [];
+        const { x, y } = this.emptyTile;
+        
+        if (x > 0) moves.push({ x: x - 1, y });
+        if (x < this.size - 1) moves.push({ x: x + 1, y });
+        if (y > 0) moves.push({ x, y: y - 1 });
+        if (y < this.size - 1) moves.push({ x, y: y + 1 });
+        
+        return moves;
+    }
+    
+    moveTile(x, y) {
+        if (!this.isValidMove(x, y)) return;
+        
+        // Swap the clicked tile with the empty tile
+        const temp = this.board[y][x];
+        this.board[y][x] = 0;
+        this.board[this.emptyTile.y][this.emptyTile.x] = temp;
+        this.emptyTile = { x, y };
+        
+        this.moveCount++;
+        document.getElementById('moveCount').textContent = this.moveCount;
+        this.updateDisplay();
+        
+        if (this.checkWin()) {
+            this.handleWin();
+        }
+    }
+    
+    isValidMove(x, y) {
+        const { x: emptyX, y: emptyY } = this.emptyTile;
+        return (Math.abs(x - emptyX) === 1 && y === emptyY) ||
+               (Math.abs(y - emptyY) === 1 && x === emptyX);
+    }
+    
+    isSolvable() {
+        let inversions = 0;
+        const flatBoard = this.board.flat().filter(tile => tile !== 0);
+        
+        for (let i = 0; i < flatBoard.length; i++) {
+            for (let j = i + 1; j < flatBoard.length; j++) {
+                if (flatBoard[i] > flatBoard[j]) {
+                    inversions++;
+                }
+            }
+        }
+        
+        return inversions % 2 === 0;
+    }
+    
+    checkWin() {
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
+                if (x === this.size - 1 && y === this.size - 1) {
+                    if (this.board[y][x] !== 0) return false;
+                } else {
+                    if (this.board[y][x] !== y * this.size + x + 1) return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    handleWin() {
+        clearInterval(this.timer);
+        const finalTime = document.getElementById('timeElapsed').textContent;
+        const currentBest = this.bestTimes[this.size];
+        
+        if (!currentBest || this.parseTime(finalTime) < this.parseTime(currentBest)) {
+            this.bestTimes[this.size] = finalTime;
+            document.getElementById('bestTime').textContent = finalTime;
+        }
+        
+        const score = Math.max(1000 - (this.moveCount * 10), 0);
+        this.saveScore(score);
+        
+        setTimeout(() => {
+            alert(`Congratulations! You solved the puzzle!\nTime: ${finalTime}\nMoves: ${this.moveCount}`);
+        }, 100);
+    }
+    
+    parseTime(timeString) {
+        const [minutes, seconds] = timeString.split(':').map(Number);
+        return minutes * 60 + seconds;
+    }
+    
+    startTimer() {
+        if (this.timer) clearInterval(this.timer);
+        this.startTime = Date.now();
+        this.timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timeElapsed').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+    
+    updateDisplay() {
+        const board = document.getElementById('puzzleBoard');
+        board.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
+        
+        board.innerHTML = '';
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
+                const tile = document.createElement('div');
+                tile.className = 'puzzle-tile';
+                if (this.board[y][x] !== 0) {
+                    tile.textContent = this.board[y][x];
+                    tile.addEventListener('click', () => this.moveTile(x, y));
+                }
+                board.appendChild(tile);
+            }
+        }
+    }
+    
+    saveScore(score) {
+        saveScore(score, document.getElementById('difficulty').value);
+    }
+}
+
+// Initialize game when page loads
+let game;
+document.addEventListener('DOMContentLoaded', () => {
+    game = new SlidingPuzzle();
+});
+</script>
+
+<style>
+.game-area {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.puzzle-board {
+    display: grid;
+    gap: 5px;
+    background-color: #2c3e50;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.puzzle-tile {
+    aspect-ratio: 1;
+    background-color: #3498db;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.puzzle-tile:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.difficulty-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+</style>
+{% endblock %} 

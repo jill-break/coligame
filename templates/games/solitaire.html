@@ -1,0 +1,430 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="game-controls mb-3">
+        <button class="btn btn-primary" id="newGame">
+            <i class="fas fa-redo"></i> New Game
+        </button>
+        <button class="btn btn-secondary" id="undoMove">
+            <i class="fas fa-undo"></i> Undo
+        </button>
+    </div>
+    
+    <div class="game-area">
+        <!-- Stock and Waste piles -->
+        <div class="top-row mb-4">
+            <div class="stock-pile" id="stockPile">
+                <!-- Stock pile cards will be added here -->
+            </div>
+            <div class="waste-pile" id="wastePile">
+                <!-- Waste pile cards will be added here -->
+            </div>
+            <div class="foundation-piles">
+                <div class="foundation-pile" data-suit="hearts"></div>
+                <div class="foundation-pile" data-suit="diamonds"></div>
+                <div class="foundation-pile" data-suit="clubs"></div>
+                <div class="foundation-pile" data-suit="spades"></div>
+            </div>
+        </div>
+        
+        <!-- Tableau piles -->
+        <div class="tableau-piles" id="tableauPiles">
+            <!-- Tableau piles will be added here -->
+        </div>
+    </div>
+    
+    <div class="game-info mt-3">
+        <span>Moves: <span id="moveCount">0</span></span>
+        <span>Time: <span id="timeElapsed">0:00</span></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+class Card {
+    constructor(suit, value, faceUp = false) {
+        this.suit = suit;
+        this.value = value;
+        this.faceUp = faceUp;
+    }
+    
+    toString() {
+        return `${this.value} of ${this.suit}`;
+    }
+    
+    getColor() {
+        return (this.suit === 'hearts' || this.suit === 'diamonds') ? 'red' : 'black';
+    }
+    
+    getValue() {
+        const values = {
+            'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+            '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
+        };
+        return values[this.value];
+    }
+}
+
+class SolitaireGame {
+    constructor() {
+        this.deck = [];
+        this.stock = [];
+        this.waste = [];
+        this.foundations = {
+            hearts: [],
+            diamonds: [],
+            clubs: [],
+            spades: []
+        };
+        this.tableau = Array(7).fill().map(() => []);
+        this.moveHistory = [];
+        this.moveCount = 0;
+        this.startTime = null;
+        this.timer = null;
+        this.initializeDeck();
+        this.dealCards();
+        this.setupEventListeners();
+        this.startTimer();
+    }
+    
+    initializeDeck() {
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        
+        for (let suit of suits) {
+            for (let value of values) {
+                this.deck.push(new Card(suit, value));
+            }
+        }
+        
+        // Shuffle deck
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+        }
+    }
+    
+    dealCards() {
+        // Deal cards to tableau
+        for (let i = 0; i < 7; i++) {
+            for (let j = i; j < 7; j++) {
+                const card = this.deck.pop();
+                card.faceUp = i === j;
+                this.tableau[j].push(card);
+            }
+        }
+        
+        // Remaining cards go to stock
+        this.stock = this.deck;
+        this.updateDisplay();
+    }
+    
+    setupEventListeners() {
+        document.getElementById('newGame').addEventListener('click', () => this.newGame());
+        document.getElementById('undoMove').addEventListener('click', () => this.undoMove());
+        
+        // Stock pile click
+        document.getElementById('stockPile').addEventListener('click', () => this.drawFromStock());
+        
+        // Setup drag and drop
+        this.setupDragAndDrop();
+    }
+    
+    setupDragAndDrop() {
+        const gameArea = document.querySelector('.game-area');
+        
+        gameArea.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('card')) {
+                e.dataTransfer.setData('text/plain', e.target.dataset.cardIndex);
+            }
+        });
+        
+        gameArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const dropTarget = e.target.closest('.pile');
+            if (dropTarget) {
+                dropTarget.classList.add('drop-target');
+            }
+        });
+        
+        gameArea.addEventListener('dragleave', (e) => {
+            const dropTarget = e.target.closest('.pile');
+            if (dropTarget) {
+                dropTarget.classList.remove('drop-target');
+            }
+        });
+        
+        gameArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const dropTarget = e.target.closest('.pile');
+            if (dropTarget) {
+                dropTarget.classList.remove('drop-target');
+                const cardIndex = e.dataTransfer.getData('text/plain');
+                this.handleCardDrop(cardIndex, dropTarget);
+            }
+        });
+    }
+    
+    handleCardDrop(cardIndex, targetPile) {
+        // Implement card movement logic
+        // This is a simplified version - you'll need to add proper validation
+        const card = this.getCardFromIndex(cardIndex);
+        if (this.isValidMove(card, targetPile)) {
+            this.moveCard(card, targetPile);
+            this.moveCount++;
+            document.getElementById('moveCount').textContent = this.moveCount;
+            this.updateDisplay();
+            this.checkWin();
+        }
+    }
+    
+    isValidMove(card, targetPile) {
+        // Implement move validation logic
+        // This is a placeholder - you'll need to add proper validation
+        return true;
+    }
+    
+    moveCard(card, targetPile) {
+        // Implement card movement logic
+        // This is a placeholder - you'll need to add proper movement logic
+    }
+    
+    drawFromStock() {
+        if (this.stock.length === 0) {
+            // Reset stock from waste
+            this.stock = this.waste.reverse();
+            this.waste = [];
+            this.stock.forEach(card => card.faceUp = false);
+        } else {
+            const card = this.stock.pop();
+            card.faceUp = true;
+            this.waste.push(card);
+        }
+        this.updateDisplay();
+    }
+    
+    updateDisplay() {
+        // Update stock pile
+        const stockPile = document.getElementById('stockPile');
+        stockPile.innerHTML = this.stock.length > 0 ? 
+            `<div class="card back"></div>` : '';
+        
+        // Update waste pile
+        const wastePile = document.getElementById('wastePile');
+        wastePile.innerHTML = this.waste.map((card, index) => `
+            <div class="card ${card.getColor()}" draggable="true" data-card-index="${index}">
+                ${card.value} ${this.getSuitSymbol(card.suit)}
+            </div>
+        `).join('');
+        
+        // Update foundation piles
+        Object.entries(this.foundations).forEach(([suit, cards]) => {
+            const pile = document.querySelector(`.foundation-pile[data-suit="${suit}"]`);
+            pile.innerHTML = cards.length > 0 ? `
+                <div class="card ${cards[cards.length - 1].getColor()}">
+                    ${cards[cards.length - 1].value} ${this.getSuitSymbol(suit)}
+                </div>
+            ` : '';
+        });
+        
+        // Update tableau piles
+        const tableauPiles = document.getElementById('tableauPiles');
+        tableauPiles.innerHTML = this.tableau.map((pile, index) => `
+            <div class="tableau-pile">
+                ${pile.map((card, cardIndex) => `
+                    <div class="card ${card.faceUp ? card.getColor() : 'back'}" 
+                         draggable="${card.faceUp}"
+                         data-card-index="${cardIndex}">
+                        ${card.faceUp ? `${card.value} ${this.getSuitSymbol(card.suit)}` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `).join('');
+    }
+    
+    getSuitSymbol(suit) {
+        const symbols = {
+            'hearts': '♥',
+            'diamonds': '♦',
+            'clubs': '♣',
+            'spades': '♠'
+        };
+        return symbols[suit];
+    }
+    
+    startTimer() {
+        this.startTime = Date.now();
+        this.timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timeElapsed').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+    
+    checkWin() {
+        const isWin = Object.values(this.foundations).every(pile => pile.length === 13);
+        if (isWin) {
+            clearInterval(this.timer);
+            const finalTime = document.getElementById('timeElapsed').textContent;
+            const finalMoves = document.getElementById('moveCount').textContent;
+            alert(`Congratulations! You won!\nTime: ${finalTime}\nMoves: ${finalMoves}`);
+            this.saveScore();
+        }
+    }
+    
+    saveScore() {
+        const score = Math.max(1000 - (this.moveCount * 10), 0);
+        saveScore(score, 'easy');
+    }
+    
+    newGame() {
+        clearInterval(this.timer);
+        this.deck = [];
+        this.stock = [];
+        this.waste = [];
+        this.foundations = {
+            hearts: [],
+            diamonds: [],
+            clubs: [],
+            spades: []
+        };
+        this.tableau = Array(7).fill().map(() => []);
+        this.moveHistory = [];
+        this.moveCount = 0;
+        document.getElementById('moveCount').textContent = '0';
+        this.initializeDeck();
+        this.dealCards();
+        this.startTimer();
+    }
+    
+    undoMove() {
+        if (this.moveHistory.length > 0) {
+            const lastMove = this.moveHistory.pop();
+            // Implement undo logic
+            this.moveCount--;
+            document.getElementById('moveCount').textContent = this.moveCount;
+            this.updateDisplay();
+        }
+    }
+}
+
+// Initialize game when page loads
+let game;
+document.addEventListener('DOMContentLoaded', () => {
+    game = new SolitaireGame();
+});
+</script>
+
+<style>
+.game-area {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #2c3e50;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.stock-pile, .waste-pile, .foundation-pile {
+    width: 100px;
+    height: 140px;
+    background-color: #34495e;
+    border-radius: 5px;
+    margin: 0 10px;
+    position: relative;
+}
+
+.foundation-piles {
+    display: flex;
+    gap: 10px;
+}
+
+.tableau-piles {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.tableau-pile {
+    min-width: 100px;
+    min-height: 140px;
+    background-color: #34495e;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.card {
+    width: 90px;
+    height: 130px;
+    background-color: white;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    position: absolute;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.card.back {
+    background-color: #e74c3c;
+    background-image: linear-gradient(45deg, #c0392b 25%, transparent 25%),
+                      linear-gradient(-45deg, #c0392b 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #c0392b 75%),
+                      linear-gradient(-45deg, transparent 75%, #c0392b 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.card.red {
+    color: #e74c3c;
+}
+
+.card.black {
+    color: #2c3e50;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.drop-target {
+    border: 2px dashed #3498db;
+}
+
+.game-controls {
+    margin-bottom: 20px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.tableau-pile .card {
+    position: relative;
+    margin-top: -100px;
+}
+
+.tableau-pile .card:first-child {
+    margin-top: 0;
+}
+</style>
+{% endblock %} 

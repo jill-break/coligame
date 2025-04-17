@@ -1,0 +1,164 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="mb-3">
+        <label class="form-label">Questions Remaining:</label>
+        <h3 id="questionsRemaining">10</h3>
+    </div>
+    <div id="quizContainer">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Question</h5>
+                <p class="card-text" id="questionText">Click Start to begin!</p>
+                <div id="options" class="mt-4">
+                    <!-- Options will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    const questions = [
+        {
+            question: "What is the capital of France?",
+            options: ["London", "Berlin", "Paris", "Madrid"],
+            correct: 2
+        },
+        {
+            question: "Which planet is known as the Red Planet?",
+            options: ["Venus", "Mars", "Jupiter", "Saturn"],
+            correct: 1
+        },
+        {
+            question: "Who painted the Mona Lisa?",
+            options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+            correct: 2
+        },
+        {
+            question: "What is the largest mammal in the world?",
+            options: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
+            correct: 1
+        },
+        {
+            question: "Which country invented tea?",
+            options: ["India", "China", "Japan", "England"],
+            correct: 1
+        },
+        {
+            question: "What is the chemical symbol for gold?",
+            options: ["Ag", "Fe", "Au", "Cu"],
+            correct: 2
+        },
+        {
+            question: "Who wrote 'Romeo and Juliet'?",
+            options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+            correct: 1
+        },
+        {
+            question: "What is the capital of Japan?",
+            options: ["Seoul", "Beijing", "Tokyo", "Bangkok"],
+            correct: 2
+        },
+        {
+            question: "Which element has the chemical symbol 'O'?",
+            options: ["Carbon", "Nitrogen", "Oxygen", "Hydrogen"],
+            correct: 2
+        },
+        {
+            question: "What is the currency of Brazil?",
+            options: ["Peso", "Real", "Dollar", "Euro"],
+            correct: 1
+        }
+    ];
+
+    let currentQuestion = 0;
+    let questionsRemaining = 10;
+    let shuffledQuestions = [];
+
+    function startGame() {
+        // Reset game state
+        currentQuestion = 0;
+        questionsRemaining = 10;
+        updateScore(0);
+        
+        // Shuffle questions
+        shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+        
+        // Display first question
+        displayQuestion();
+    }
+
+    function displayQuestion() {
+        const question = shuffledQuestions[currentQuestion];
+        document.getElementById('questionText').textContent = question.question;
+        
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+        
+        question.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.className = 'btn btn-outline-primary m-2';
+            button.style.width = '200px';
+            button.textContent = option;
+            button.addEventListener('click', () => checkAnswer(index));
+            optionsContainer.appendChild(button);
+        });
+        
+        document.getElementById('questionsRemaining').textContent = questionsRemaining;
+    }
+
+    function checkAnswer(selectedIndex) {
+        const question = shuffledQuestions[currentQuestion];
+        const isCorrect = selectedIndex === question.correct;
+        
+        // Update score
+        if (isCorrect) {
+            updateScore(currentScore + 10);
+        }
+        
+        // Disable all buttons
+        const buttons = document.querySelectorAll('#options button');
+        buttons.forEach(button => {
+            button.disabled = true;
+            if (button.textContent === question.options[question.correct]) {
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-success');
+            }
+        });
+        
+        // Move to next question after delay
+        setTimeout(() => {
+            currentQuestion++;
+            questionsRemaining--;
+            
+            if (currentQuestion < shuffledQuestions.length) {
+                displayQuestion();
+            } else {
+                alert(`Quiz completed! Your score: ${currentScore}`);
+                saveScore(currentScore, document.getElementById('difficulty').value);
+                gameStarted = false;
+                document.getElementById('startGame').disabled = false;
+                document.getElementById('difficulty').disabled = false;
+            }
+        }, 1000);
+    }
+</script>
+
+<style>
+#options button {
+    transition: all 0.3s;
+}
+
+#options button:hover {
+    transform: scale(1.05);
+}
+
+#options button:disabled {
+    cursor: default;
+}
+</style>
+{% endblock %} 

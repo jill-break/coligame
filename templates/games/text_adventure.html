@@ -1,0 +1,199 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="mb-3">
+        <label class="form-label">Health:</label>
+        <h3 id="health">100</h3>
+    </div>
+    <div id="gameContainer" class="card">
+        <div class="card-body">
+            <div id="storyText" class="mb-4" style="height: 300px; overflow-y: auto;">
+                <!-- Story text will be displayed here -->
+            </div>
+            <div id="choices" class="mt-4">
+                <!-- Choice buttons will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    const story = {
+        start: {
+            text: "You wake up in a mysterious cave. The air is damp and you can barely see in the dim light. What do you do?",
+            choices: [
+                { text: "Look around", next: "lookAround", score: 0 },
+                { text: "Call for help", next: "callHelp", score: -10 }
+            ]
+        },
+        lookAround: {
+            text: "You find a torch and a small backpack. The cave seems to have two passages leading in different directions.",
+            choices: [
+                { text: "Take the left passage", next: "leftPassage", score: 0 },
+                { text: "Take the right passage", next: "rightPassage", score: 0 }
+            ]
+        },
+        callHelp: {
+            text: "Your call echoes through the cave, but no one responds. You notice a torch and a small backpack nearby.",
+            choices: [
+                { text: "Take the left passage", next: "leftPassage", score: 0 },
+                { text: "Take the right passage", next: "rightPassage", score: 0 }
+            ]
+        },
+        leftPassage: {
+            text: "You enter a larger chamber with ancient markings on the walls. There's a chest in the corner.",
+            choices: [
+                { text: "Open the chest", next: "openChest", score: 20 },
+                { text: "Study the markings", next: "studyMarkings", score: 10 }
+            ]
+        },
+        rightPassage: {
+            text: "You find yourself in a narrow tunnel. There's a small stream running through it.",
+            choices: [
+                { text: "Follow the stream", next: "followStream", score: 0 },
+                { text: "Turn back", next: "start", score: -5 }
+            ]
+        },
+        openChest: {
+            text: "You find a map and some gold coins! The map shows a way out of the cave.",
+            choices: [
+                { text: "Follow the map", next: "followMap", score: 30 },
+                { text: "Take the gold and leave", next: "end", score: 20 }
+            ]
+        },
+        studyMarkings: {
+            text: "The markings reveal a hidden passage behind a loose stone.",
+            choices: [
+                { text: "Enter the hidden passage", next: "hiddenPassage", score: 25 },
+                { text: "Return to the main chamber", next: "leftPassage", score: 0 }
+            ]
+        },
+        followStream: {
+            text: "The stream leads to a small underground lake. There's a boat tied to a post.",
+            choices: [
+                { text: "Take the boat", next: "takeBoat", score: 15 },
+                { text: "Look for another way", next: "rightPassage", score: 0 }
+            ]
+        },
+        followMap: {
+            text: "Following the map, you find your way out of the cave safely!",
+            choices: [
+                { text: "Play again", next: "start", score: 0 }
+            ]
+        },
+        hiddenPassage: {
+            text: "The hidden passage leads to a treasure room filled with ancient artifacts!",
+            choices: [
+                { text: "Take some treasure", next: "end", score: 40 },
+                { text: "Leave it untouched", next: "end", score: 50 }
+            ]
+        },
+        takeBoat: {
+            text: "The boat takes you across the lake to a small island with a portal.",
+            choices: [
+                { text: "Enter the portal", next: "end", score: 35 },
+                { text: "Return to shore", next: "followStream", score: 0 }
+            ]
+        },
+        end: {
+            text: "Congratulations! You've completed your adventure!",
+            choices: [
+                { text: "Play again", next: "start", score: 0 }
+            ]
+        }
+    };
+
+    let currentScene = 'start';
+    let health = 100;
+
+    function startGame() {
+        // Reset game state
+        currentScene = 'start';
+        health = 100;
+        updateScore(0);
+        updateHealth(health);
+        
+        // Display first scene
+        displayScene();
+    }
+
+    function displayScene() {
+        const scene = story[currentScene];
+        const storyText = document.getElementById('storyText');
+        const choicesContainer = document.getElementById('choices');
+        
+        // Add scene text with fade effect
+        const textElement = document.createElement('p');
+        textElement.textContent = scene.text;
+        textElement.style.opacity = '0';
+        storyText.appendChild(textElement);
+        
+        // Fade in text
+        setTimeout(() => {
+            textElement.style.transition = 'opacity 0.5s';
+            textElement.style.opacity = '1';
+        }, 100);
+        
+        // Scroll to bottom
+        storyText.scrollTop = storyText.scrollHeight;
+        
+        // Clear and add new choices
+        choicesContainer.innerHTML = '';
+        
+        scene.choices.forEach(choice => {
+            const button = document.createElement('button');
+            button.className = 'btn btn-outline-primary m-2';
+            button.style.width = '200px';
+            button.textContent = choice.text;
+            button.addEventListener('click', () => makeChoice(choice));
+            choicesContainer.appendChild(button);
+        });
+    }
+
+    function makeChoice(choice) {
+        // Update score and health
+        updateScore(currentScore + choice.score);
+        if (choice.score < 0) {
+            updateHealth(health + choice.score);
+        }
+        
+        // Move to next scene
+        currentScene = choice.next;
+        displayScene();
+    }
+
+    function updateHealth(newHealth) {
+        health = Math.max(0, Math.min(100, newHealth));
+        document.getElementById('health').textContent = health;
+        
+        if (health <= 0) {
+            alert('Game Over! Your health has reached 0.');
+            saveScore(currentScore, document.getElementById('difficulty').value);
+            gameStarted = false;
+            document.getElementById('startGame').disabled = false;
+            document.getElementById('difficulty').disabled = false;
+        }
+    }
+</script>
+
+<style>
+#storyText {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+#choices button {
+    transition: all 0.3s;
+}
+
+#choices button:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Game Info -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle"></i> Game Info
+                    </h5>
+                    <div class="mb-3">
+                        <label class="form-label">Difficulty:</label>
+                        <select class="form-select" id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Score:</label>
+                        <h3 id="score">0</h3>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">High Score:</label>
+                        <h3 id="highScore">0</h3>
+                    </div>
+                    <button class="btn btn-primary" id="startGame">
+                        <i class="fas fa-play"></i> Start Game
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-gamepad"></i> {{ game_name }}
+                    </h5>
+                    {% block game_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Common game functionality
+    let gameStarted = false;
+    let currentScore = 0;
+    let highScore = 0;
+
+    // Update score display
+    function updateScore(score) {
+        currentScore = score;
+        document.getElementById('score').textContent = currentScore;
+        if (currentScore > highScore) {
+            highScore = currentScore;
+            document.getElementById('highScore').textContent = highScore;
+        }
+    }
+
+    // Save score to server
+    async function saveScore(score, difficulty) {
+        try {
+            const response = await fetch('/api/save_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    game_type: '{{ game_type }}',
+                    score: score,
+                    difficulty: difficulty
+                })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                console.log('Score saved successfully');
+            }
+        } catch (error) {
+            console.error('Error saving score:', error);
+        }
+    }
+
+    // Start game handler
+    document.getElementById('startGame').addEventListener('click', function() {
+        if (!gameStarted) {
+            gameStarted = true;
+            this.disabled = true;
+            document.getElementById('difficulty').disabled = true;
+            startGame();
+        }
+    });
+
+    // Game-specific functionality
+    function startGame() {
+        // Override this in game-specific templates
+    }
+
+    // Common game controls
+    document.addEventListener('keydown', function(event) {
+        if (gameStarted) {
+            handleKeyPress(event);
+        }
+    });
+
+    function handleKeyPress(event) {
+        // Override this in game-specific templates
+    }
+</script>
+{% block game_scripts %}{% endblock %}
+{% endblock %} 

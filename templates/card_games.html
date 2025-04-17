@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-playing-card"></i> Card Games
+    </h2>
+    
+    <div class="row">
+        <!-- Memory Card Game -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-brain"></i> Memory Match
+                    </h5>
+                    <p class="card-text">
+                        Test your memory by matching pairs of cards. Find all matching pairs to win!
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('memory_match') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='memory_match') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solitaire -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-cards"></i> Solitaire
+                    </h5>
+                    <p class="card-text">
+                        Classic card game where you arrange cards in descending order by alternating colors.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('solitaire') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='solitaire') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blackjack -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-cards"></i> Blackjack
+                    </h5>
+                    <p class="card-text">
+                        Try to beat the dealer by getting closer to 21 without going over.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('blackjack') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='blackjack') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

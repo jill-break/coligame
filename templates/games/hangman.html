@@ -1,0 +1,236 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Play Hangman</h5>
+            <div class="text-start">
+                <ol>
+                    <li>Select your difficulty level (Easy: 4-5 letters, Medium: 6-7 letters, Hard: 8+ letters)</li>
+                    <li>You'll see a word displayed with blank spaces for each letter</li>
+                    <li>Guess one letter at a time by entering it in the input field</li>
+                    <li>If the letter is in the word, it will appear in all its correct positions</li>
+                    <li>If the letter is not in the word, you'll lose one life (6 lives total)</li>
+                    <li>Watch the hangman drawing progress as you make wrong guesses</li>
+                    <li>Try to guess the word before the hangman is complete</li>
+                    <li>Score points by correctly guessing the word</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty:</label>
+        <select class="form-select" id="difficulty">
+            <option value="easy">Easy (4-5 letters)</option>
+            <option value="medium">Medium (6-7 letters)</option>
+            <option value="hard">Hard (8+ letters)</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <h4>Word:</h4>
+        <div id="word-display" class="display-4 mb-3"></div>
+    </div>
+    
+    <div class="mb-3">
+        <h4>Hangman:</h4>
+        <pre id="hangman-display" class="text-center mb-3"></pre>
+    </div>
+    
+    <div class="mb-3">
+        <label for="guess" class="form-label">Guess a Letter:</label>
+        <input type="text" class="form-control" id="guess" maxlength="1" placeholder="Enter a letter">
+    </div>
+    
+    <button id="submit-guess" class="btn btn-primary">
+        <i class="fas fa-check"></i> Submit Guess
+    </button>
+    
+    <div id="feedback" class="mt-3"></div>
+    <div id="attempts" class="mt-2">Attempts remaining: <span id="attempts-count">6</span></div>
+    <div id="guessed-letters" class="mt-2">Guessed letters: <span id="guessed-letters-display"></span></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const wordList = {
+        easy: ['CAT', 'DOG', 'BIRD', 'FISH', 'TREE', 'BOOK', 'STAR', 'MOON', 'SUN', 'SKY'],
+        medium: ['PENCIL', 'WINDOW', 'BRIDGE', 'FLOWER', 'GARDEN', 'RIVER', 'BEACH', 'CLOUD', 'STORM', 'SNAKE'],
+        hard: ['COMPUTER', 'ELEPHANT', 'BUTTERFLY', 'MOUNTAIN', 'OCEAN', 'UNIVERSE', 'PLANET', 'GALAXY', 'TELESCOPE', 'ASTRONAUT']
+    };
+
+    const hangmanStages = [
+        `
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+=========`,
+        `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+=========`
+    ];
+
+    let currentWord = '';
+    let displayWord = '';
+    let attemptsLeft = 6;
+    let guessedLetters = new Set();
+    let currentDifficulty = 'easy';
+
+    function getRandomWord(difficulty) {
+        const words = wordList[difficulty];
+        return words[Math.floor(Math.random() * words.length)];
+    }
+
+    function initializeGame() {
+        currentDifficulty = document.getElementById('difficulty').value;
+        currentWord = getRandomWord(currentDifficulty);
+        displayWord = '_'.repeat(currentWord.length);
+        attemptsLeft = 6;
+        guessedLetters.clear();
+        
+        document.getElementById('word-display').textContent = displayWord;
+        document.getElementById('attempts-count').textContent = attemptsLeft;
+        document.getElementById('hangman-display').textContent = hangmanStages[0];
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('guess').value = '';
+        document.getElementById('guessed-letters-display').textContent = '';
+        document.getElementById('submit-guess').disabled = false;
+    }
+
+    function updateDisplay() {
+        document.getElementById('word-display').textContent = displayWord;
+        document.getElementById('hangman-display').textContent = hangmanStages[6 - attemptsLeft];
+        document.getElementById('guessed-letters-display').textContent = Array.from(guessedLetters).join(', ');
+    }
+
+    function checkGuess() {
+        const guess = document.getElementById('guess').value.toUpperCase();
+        const feedback = document.getElementById('feedback');
+        
+        if (guessedLetters.has(guess)) {
+            feedback.textContent = 'You already guessed that letter!';
+            feedback.className = 'mt-3 text-warning';
+            return;
+        }
+        
+        guessedLetters.add(guess);
+        
+        if (currentWord.includes(guess)) {
+            let newDisplay = '';
+            for (let i = 0; i < currentWord.length; i++) {
+                if (currentWord[i] === guess) {
+                    newDisplay += guess;
+                } else {
+                    newDisplay += displayWord[i];
+                }
+            }
+            displayWord = newDisplay;
+            
+            if (displayWord === currentWord) {
+                feedback.textContent = 'Congratulations! You won!';
+                feedback.className = 'mt-3 text-success';
+                updateScore(100);
+                saveScore();
+                document.getElementById('submit-guess').disabled = true;
+                return;
+            }
+            
+            feedback.textContent = 'Correct guess!';
+            feedback.className = 'mt-3 text-success';
+        } else {
+            attemptsLeft--;
+            if (attemptsLeft === 0) {
+                feedback.textContent = `Game Over! The word was ${currentWord}`;
+                feedback.className = 'mt-3 text-danger';
+                document.getElementById('submit-guess').disabled = true;
+                return;
+            }
+            
+            feedback.textContent = 'Wrong guess!';
+            feedback.className = 'mt-3 text-danger';
+        }
+        
+        updateDisplay();
+    }
+
+    // Override the base game functions
+    window.startGame = function() {
+        initializeGame();
+    };
+
+    window.pauseGame = function() {
+        document.getElementById('submit-guess').disabled = true;
+    };
+
+    window.resetGame = function() {
+        initializeGame();
+    };
+
+    // Add event listeners
+    document.getElementById('difficulty').addEventListener('change', function() {
+        if (gameActive) {
+            initializeGame();
+        }
+    });
+
+    document.getElementById('submit-guess').addEventListener('click', checkGuess);
+    
+    document.getElementById('guess').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            checkGuess();
+        }
+    });
+</script>
+{% endblock %} 

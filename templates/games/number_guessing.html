@@ -1,0 +1,188 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Play Number Guessing</h5>
+            <div class="text-start">
+                <ol>
+                    <li>Select your difficulty level:
+                        <ul>
+                            <li>Easy: Numbers between 1 and 10</li>
+                            <li>Medium: Numbers between 1 and 50</li>
+                            <li>Hard: Numbers between 1 and 100</li>
+                        </ul>
+                    </li>
+                    <li>Enter your guess in the input field</li>
+                    <li>Click Submit or press Enter to check your guess</li>
+                    <li>You'll get feedback if your guess is too high or too low</li>
+                    <li>Try to guess the number in as few attempts as possible</li>
+                    <li>Score points based on how quickly you guess the number</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty:</label>
+        <select class="form-select" id="difficulty">
+            <option value="easy">Easy (1-10)</option>
+            <option value="medium">Medium (1-50)</option>
+            <option value="hard">Hard (1-100)</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="guess" class="form-label">Your Guess:</label>
+        <input type="number" class="form-control" id="guess" placeholder="Enter a number">
+    </div>
+    
+    <button id="submit-guess" class="btn btn-primary">
+        <i class="fas fa-check"></i> Submit Guess
+    </button>
+    
+    <div id="feedback" class="mt-3"></div>
+    <div id="attempts" class="mt-2">Attempts: <span id="attempts-count">0</span></div>
+    <div id="range" class="mt-2"></div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    let targetNumber = 0;
+    let attempts = 0;
+    let currentDifficulty = 'easy';
+    let minNumber = 1;
+    let maxNumber = 10;
+
+    function getRandomNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function updateRange() {
+        const rangeElement = document.getElementById('range');
+        rangeElement.textContent = `Range: ${minNumber} - ${maxNumber}`;
+        rangeElement.className = 'mt-2 text-info';
+    }
+
+    function initializeGame() {
+        currentDifficulty = document.getElementById('difficulty').value;
+        
+        // Set range based on difficulty
+        switch(currentDifficulty) {
+            case 'easy':
+                minNumber = 1;
+                maxNumber = 10;
+                break;
+            case 'medium':
+                minNumber = 1;
+                maxNumber = 50;
+                break;
+            case 'hard':
+                minNumber = 1;
+                maxNumber = 100;
+                break;
+        }
+        
+        targetNumber = getRandomNumber(minNumber, maxNumber);
+        attempts = 0;
+        document.getElementById('attempts-count').textContent = attempts;
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('guess').value = '';
+        document.getElementById('guess').min = minNumber;
+        document.getElementById('guess').max = maxNumber;
+        document.getElementById('submit-guess').disabled = false;
+        updateRange();
+    }
+
+    function checkGuess() {
+        const guessInput = document.getElementById('guess');
+        const guess = parseInt(guessInput.value);
+        const feedback = document.getElementById('feedback');
+        
+        if (isNaN(guess) || guess < minNumber || guess > maxNumber) {
+            feedback.textContent = `Please enter a number between ${minNumber} and ${maxNumber}`;
+            feedback.className = 'mt-3 text-danger';
+            return;
+        }
+        
+        attempts++;
+        document.getElementById('attempts-count').textContent = attempts;
+        
+        if (guess === targetNumber) {
+            feedback.textContent = `Congratulations! You found the number in ${attempts} attempts!`;
+            feedback.className = 'mt-3 text-success';
+            
+            // Calculate score based on attempts and difficulty
+            let baseScore = 100;
+            let difficultyMultiplier = {
+                'easy': 1,
+                'medium': 2,
+                'hard': 3
+            }[currentDifficulty];
+            
+            let score = Math.max(0, baseScore - (attempts * 10)) * difficultyMultiplier;
+            updateScore(score);
+            
+            // Save score with difficulty level
+            fetch('/api/save_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    game_type: 'number-guessing',
+                    score: score,
+                    difficulty: currentDifficulty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Score saved successfully');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+            
+            document.getElementById('submit-guess').disabled = true;
+            return;
+        }
+        
+        if (guess < targetNumber) {
+            feedback.textContent = 'Too low! Try a higher number.';
+        } else {
+            feedback.textContent = 'Too high! Try a lower number.';
+        }
+        feedback.className = 'mt-3 text-warning';
+    }
+
+    // Override the base game functions
+    window.startGame = function() {
+        initializeGame();
+    };
+
+    window.pauseGame = function() {
+        document.getElementById('submit-guess').disabled = true;
+    };
+
+    window.resetGame = function() {
+        initializeGame();
+    };
+
+    // Add event listeners
+    document.getElementById('difficulty').addEventListener('change', function() {
+        if (gameActive) {
+            initializeGame();
+        }
+    });
+
+    document.getElementById('submit-guess').addEventListener('click', checkGuess);
+    
+    document.getElementById('guess').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            checkGuess();
+        }
+    });
+</script>
+{% endblock %} 

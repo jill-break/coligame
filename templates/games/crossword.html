@@ -1,0 +1,307 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Play Crossword Puzzle</h5>
+            <div class="text-start">
+                <ol>
+                    <li>Select your difficulty level (Easy: 5x5, Medium: 7x7, Hard: 10x10)</li>
+                    <li>Read the clues provided on the right side of the grid</li>
+                    <li>Clues are divided into "Across" and "Down"</li>
+                    <li>Click on any empty cell to start entering letters</li>
+                    <li>Use the arrow keys or Tab to move between cells:
+                        <ul>
+                            <li>→ or Tab: Move right</li>
+                            <li>←: Move left</li>
+                            <li>↓: Move down</li>
+                            <li>↑: Move up</li>
+                        </ul>
+                    </li>
+                    <li>Enter one letter per cell</li>
+                    <li>Words are automatically checked as you type</li>
+                    <li>Correctly completed words will be marked in the clue list</li>
+                    <li>Score points for each word you complete</li>
+                    <li>Try to complete all words to finish the puzzle</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty:</label>
+        <select class="form-select" id="difficulty">
+            <option value="easy">Easy (5x5)</option>
+            <option value="medium">Medium (7x7)</option>
+            <option value="hard">Hard (10x10)</option>
+        </select>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div id="crossword-grid" class="mb-3"></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Clues</h5>
+                    <div id="clues" class="text-start"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="feedback" class="mt-3"></div>
+    <div id="score" class="mt-2">Words completed: <span id="words-completed">0</span>/<span id="total-words">0</span></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const puzzles = {
+        easy: {
+            size: 5,
+            words: [
+                { word: 'CAT', clue: 'A small domesticated feline', start: [0, 0], direction: 'across' },
+                { word: 'DOG', clue: 'A loyal canine companion', start: [0, 0], direction: 'down' },
+                { word: 'BIRD', clue: 'A winged creature that can fly', start: [0, 2], direction: 'across' },
+                { word: 'FISH', clue: 'A creature that lives in water', start: [2, 0], direction: 'down' }
+            ]
+        },
+        medium: {
+            size: 7,
+            words: [
+                { word: 'PENCIL', clue: 'A writing instrument', start: [0, 0], direction: 'across' },
+                { word: 'WINDOW', clue: 'An opening in a wall', start: [0, 0], direction: 'down' },
+                { word: 'BRIDGE', clue: 'A structure over water', start: [0, 4], direction: 'across' },
+                { word: 'FLOWER', clue: 'A colorful plant part', start: [2, 0], direction: 'down' },
+                { word: 'GARDEN', clue: 'A place to grow plants', start: [4, 0], direction: 'across' }
+            ]
+        },
+        hard: {
+            size: 10,
+            words: [
+                { word: 'COMPUTER', clue: 'An electronic device for processing data', start: [0, 0], direction: 'across' },
+                { word: 'ELEPHANT', clue: 'A large land mammal with a trunk', start: [0, 0], direction: 'down' },
+                { word: 'BUTTERFLY', clue: 'A colorful flying insect', start: [0, 2], direction: 'across' },
+                { word: 'MOUNTAIN', clue: 'A large landform rising above surroundings', start: [2, 0], direction: 'down' },
+                { word: 'OCEAN', clue: 'A large body of salt water', start: [4, 0], direction: 'across' }
+            ]
+        }
+    };
+
+    let grid = [];
+    let words = [];
+    let completedWords = new Set();
+    let currentDifficulty = 'easy';
+
+    function createGrid(size) {
+        grid = [];
+        for (let i = 0; i < size; i++) {
+            grid[i] = [];
+            for (let j = 0; j < size; j++) {
+                grid[i][j] = { letter: '', number: '', isBlack: true };
+            }
+        }
+    }
+
+    function initializeGame() {
+        currentDifficulty = document.getElementById('difficulty').value;
+        const puzzle = puzzles[currentDifficulty];
+        createGrid(puzzle.size);
+        words = [...puzzle.words];
+        completedWords.clear();
+        
+        // Place words in the grid
+        words.forEach((word, index) => {
+            const [startRow, startCol] = word.start;
+            for (let i = 0; i < word.word.length; i++) {
+                const row = startRow + (word.direction === 'down' ? i : 0);
+                const col = startCol + (word.direction === 'across' ? i : 0);
+                grid[row][col] = {
+                    letter: '',
+                    number: index + 1,
+                    isBlack: false
+                };
+            }
+        });
+        
+        displayGrid();
+        displayClues();
+    }
+
+    function displayGrid() {
+        const container = document.getElementById('crossword-grid');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid.length; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'd-inline-block border text-center';
+                cell.style.width = '40px';
+                cell.style.height = '40px';
+                cell.style.lineHeight = '40px';
+                cell.style.position = 'relative';
+                
+                if (grid[i][j].isBlack) {
+                    cell.style.backgroundColor = '#000';
+                } else {
+                    cell.style.backgroundColor = '#fff';
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'form-control text-center p-0';
+                    input.style.width = '100%';
+                    input.style.height = '100%';
+                    input.style.border = 'none';
+                    input.dataset.row = i;
+                    input.dataset.col = j;
+                    
+                    if (grid[i][j].number) {
+                        const number = document.createElement('div');
+                        number.className = 'position-absolute top-0 start-0 small';
+                        number.style.fontSize = '8px';
+                        number.textContent = grid[i][j].number;
+                        cell.appendChild(number);
+                    }
+                    
+                    input.addEventListener('input', handleInput);
+                    input.addEventListener('keydown', handleKeydown);
+                    cell.appendChild(input);
+                }
+                
+                container.appendChild(cell);
+            }
+        }
+    }
+
+    function displayClues() {
+        const container = document.getElementById('clues');
+        container.innerHTML = '';
+        
+        const acrossClues = words.filter(w => w.direction === 'across');
+        const downClues = words.filter(w => w.direction === 'down');
+        
+        let html = '<h6>Across</h6>';
+        acrossClues.forEach((word, index) => {
+            html += `<div class="mb-2">
+                <strong>${index + 1}.</strong> ${word.clue}
+                <span class="badge ${completedWords.has(word.word) ? 'bg-success' : 'bg-secondary'} float-end">
+                    ${word.word.length}
+                </span>
+            </div>`;
+        });
+        
+        html += '<h6 class="mt-3">Down</h6>';
+        downClues.forEach((word, index) => {
+            html += `<div class="mb-2">
+                <strong>${index + 1}.</strong> ${word.clue}
+                <span class="badge ${completedWords.has(word.word) ? 'bg-success' : 'bg-secondary'} float-end">
+                    ${word.word.length}
+                </span>
+            </div>`;
+        });
+        
+        container.innerHTML = html;
+        document.getElementById('words-completed').textContent = completedWords.size;
+        document.getElementById('total-words').textContent = words.length;
+    }
+
+    function handleInput(e) {
+        const input = e.target;
+        const row = parseInt(input.dataset.row);
+        const col = parseInt(input.dataset.col);
+        const value = input.value.toUpperCase();
+        
+        if (value.length === 1) {
+            grid[row][col].letter = value;
+            checkWords();
+        }
+    }
+
+    function handleKeydown(e) {
+        const input = e.target;
+        const row = parseInt(input.dataset.row);
+        const col = parseInt(input.dataset.col);
+        
+        if (e.key === 'ArrowRight' || e.key === 'Tab') {
+            e.preventDefault();
+            const nextInput = findNextInput(row, col, 1);
+            if (nextInput) nextInput.focus();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prevInput = findNextInput(row, col, -1);
+            if (prevInput) prevInput.focus();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const downInput = findNextInput(row, col, grid.length);
+            if (downInput) downInput.focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const upInput = findNextInput(row, col, -grid.length);
+            if (upInput) upInput.focus();
+        }
+    }
+
+    function findNextInput(row, col, offset) {
+        const inputs = document.querySelectorAll('#crossword-grid input');
+        const currentIndex = row * grid.length + col;
+        const nextIndex = currentIndex + offset;
+        
+        if (nextIndex >= 0 && nextIndex < inputs.length) {
+            return inputs[nextIndex];
+        }
+        return null;
+    }
+
+    function checkWords() {
+        words.forEach(word => {
+            if (!completedWords.has(word.word)) {
+                let currentWord = '';
+                const [startRow, startCol] = word.start;
+                
+                for (let i = 0; i < word.word.length; i++) {
+                    const row = startRow + (word.direction === 'down' ? i : 0);
+                    const col = startCol + (word.direction === 'across' ? i : 0);
+                    currentWord += grid[row][col].letter;
+                }
+                
+                if (currentWord === word.word) {
+                    completedWords.add(word.word);
+                    updateScore(20);
+                    saveScore();
+                    
+                    if (completedWords.size === words.length) {
+                        document.getElementById('feedback').textContent = 'Congratulations! You completed the puzzle!';
+                        document.getElementById('feedback').className = 'mt-3 text-success';
+                    }
+                    
+                    displayClues();
+                }
+            }
+        });
+    }
+
+    // Override the base game functions
+    window.startGame = function() {
+        initializeGame();
+    };
+
+    window.pauseGame = function() {
+        // No pause functionality needed for crossword
+    };
+
+    window.resetGame = function() {
+        initializeGame();
+    };
+
+    // Add event listener
+    document.getElementById('difficulty').addEventListener('change', function() {
+        if (gameActive) {
+            initializeGame();
+        }
+    });
+</script>
+{% endblock %} 

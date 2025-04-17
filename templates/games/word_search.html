@@ -1,0 +1,246 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Play Word Search</h5>
+            <div class="text-start">
+                <ol>
+                    <li>Select your difficulty level (Easy: 8x8 grid, Medium: 10x10 grid, Hard: 12x12 grid)</li>
+                    <li>Look at the list of words you need to find</li>
+                    <li>Click and drag your mouse over letters to select them</li>
+                    <li>Words can be found in any direction:
+                        <ul>
+                            <li>Horizontal (left to right)</li>
+                            <li>Vertical (top to bottom)</li>
+                            <li>Diagonal (any direction)</li>
+                            <li>Backwards (in any direction)</li>
+                        </ul>
+                    </li>
+                    <li>When you find a word, it will be highlighted in green</li>
+                    <li>Found words will be marked off the word list</li>
+                    <li>Score points for each word you find</li>
+                    <li>Try to find all words to complete the puzzle</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty:</label>
+        <select class="form-select" id="difficulty">
+            <option value="easy">Easy (8x8 grid)</option>
+            <option value="medium">Medium (10x10 grid)</option>
+            <option value="hard">Hard (12x12 grid)</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <h4>Find these words:</h4>
+        <div id="word-list" class="mb-3"></div>
+    </div>
+    
+    <div class="mb-3">
+        <div id="grid-container" class="d-inline-block"></div>
+    </div>
+    
+    <div id="feedback" class="mt-3"></div>
+    <div id="score" class="mt-2">Words found: <span id="words-found">0</span>/<span id="total-words">0</span></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const wordList = {
+        easy: ['CAT', 'DOG', 'BIRD', 'FISH', 'TREE'],
+        medium: ['PENCIL', 'WINDOW', 'BRIDGE', 'FLOWER', 'GARDEN'],
+        hard: ['COMPUTER', 'ELEPHANT', 'BUTTERFLY', 'MOUNTAIN', 'OCEAN']
+    };
+
+    let grid = [];
+    let words = [];
+    let foundWords = new Set();
+    let selectedCells = [];
+    let currentDifficulty = 'easy';
+
+    function createGrid(size) {
+        grid = [];
+        for (let i = 0; i < size; i++) {
+            grid[i] = [];
+            for (let j = 0; j < size; j++) {
+                grid[i][j] = '';
+            }
+        }
+    }
+
+    function placeWord(word, startRow, startCol, direction) {
+        const directions = {
+            horizontal: [0, 1],
+            vertical: [1, 0],
+            diagonal: [1, 1],
+            reverseHorizontal: [0, -1],
+            reverseVertical: [-1, 0],
+            reverseDiagonal: [-1, -1]
+        };
+
+        const [dRow, dCol] = directions[direction];
+        for (let i = 0; i < word.length; i++) {
+            const row = startRow + (dRow * i);
+            const col = startCol + (dCol * i);
+            if (row < 0 || row >= grid.length || col < 0 || col >= grid.length) {
+                return false;
+            }
+            if (grid[row][col] !== '' && grid[row][col] !== word[i]) {
+                return false;
+            }
+            grid[row][col] = word[i];
+        }
+        return true;
+    }
+
+    function fillGrid() {
+        const size = grid.length;
+        for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size; j++) {
+                if (grid[i][j] === '') {
+                    grid[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                }
+            }
+        }
+    }
+
+    function initializeGame() {
+        currentDifficulty = document.getElementById('difficulty').value;
+        const size = currentDifficulty === 'easy' ? 8 : currentDifficulty === 'medium' ? 10 : 12;
+        createGrid(size);
+        
+        words = [...wordList[currentDifficulty]];
+        foundWords.clear();
+        
+        // Place words in the grid
+        for (const word of words) {
+            let placed = false;
+            while (!placed) {
+                const startRow = Math.floor(Math.random() * size);
+                const startCol = Math.floor(Math.random() * size);
+                const directions = ['horizontal', 'vertical', 'diagonal', 'reverseHorizontal', 'reverseVertical', 'reverseDiagonal'];
+                const direction = directions[Math.floor(Math.random() * directions.length)];
+                placed = placeWord(word, startRow, startCol, direction);
+            }
+        }
+        
+        fillGrid();
+        displayGrid();
+        displayWordList();
+    }
+
+    function displayGrid() {
+        const container = document.getElementById('grid-container');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid.length; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'd-inline-block border text-center';
+                cell.style.width = '40px';
+                cell.style.height = '40px';
+                cell.style.lineHeight = '40px';
+                cell.style.cursor = 'pointer';
+                cell.textContent = grid[i][j];
+                cell.dataset.row = i;
+                cell.dataset.col = j;
+                
+                cell.addEventListener('mousedown', startSelection);
+                cell.addEventListener('mouseover', continueSelection);
+                cell.addEventListener('mouseup', endSelection);
+                
+                container.appendChild(cell);
+            }
+        }
+    }
+
+    function displayWordList() {
+        const wordList = document.getElementById('word-list');
+        wordList.innerHTML = words.map(word => 
+            `<span class="badge bg-primary me-2 ${foundWords.has(word) ? 'bg-success' : ''}">${word}</span>`
+        ).join('');
+        document.getElementById('words-found').textContent = foundWords.size;
+        document.getElementById('total-words').textContent = words.length;
+    }
+
+    function startSelection(e) {
+        selectedCells = [e.target];
+        e.target.style.backgroundColor = '#e9ecef';
+    }
+
+    function continueSelection(e) {
+        if (selectedCells.length > 0) {
+            const cell = e.target;
+            if (!selectedCells.includes(cell)) {
+                selectedCells.push(cell);
+                cell.style.backgroundColor = '#e9ecef';
+            }
+        }
+    }
+
+    function endSelection() {
+        if (selectedCells.length > 0) {
+            const word = selectedCells.map(cell => cell.textContent).join('');
+            const reverseWord = word.split('').reverse().join('');
+            
+            if (words.includes(word) && !foundWords.has(word)) {
+                foundWords.add(word);
+                selectedCells.forEach(cell => cell.style.backgroundColor = '#28a745');
+                updateScore(20);
+                saveScore();
+                
+                if (foundWords.size === words.length) {
+                    document.getElementById('feedback').textContent = 'Congratulations! You found all the words!';
+                    document.getElementById('feedback').className = 'mt-3 text-success';
+                }
+            } else if (words.includes(reverseWord) && !foundWords.has(reverseWord)) {
+                foundWords.add(reverseWord);
+                selectedCells.forEach(cell => cell.style.backgroundColor = '#28a745');
+                updateScore(20);
+                saveScore();
+                
+                if (foundWords.size === words.length) {
+                    document.getElementById('feedback').textContent = 'Congratulations! You found all the words!';
+                    document.getElementById('feedback').className = 'mt-3 text-success';
+                }
+            } else {
+                selectedCells.forEach(cell => cell.style.backgroundColor = '#dc3545');
+                setTimeout(() => {
+                    selectedCells.forEach(cell => cell.style.backgroundColor = '');
+                }, 500);
+            }
+            
+            displayWordList();
+        }
+        
+        selectedCells = [];
+    }
+
+    // Override the base game functions
+    window.startGame = function() {
+        initializeGame();
+    };
+
+    window.pauseGame = function() {
+        // No pause functionality needed for word search
+    };
+
+    window.resetGame = function() {
+        initializeGame();
+    };
+
+    // Add event listener
+    document.getElementById('difficulty').addEventListener('change', function() {
+        if (gameActive) {
+            initializeGame();
+        }
+    });
+</script>
+{% endblock %} 

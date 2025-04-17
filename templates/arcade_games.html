@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-gamepad"></i> Arcade Games
+    </h2>
+    
+    <div class="row">
+        <!-- Snake -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-snake"></i> Snake
+                    </h5>
+                    <p class="card-text">
+                        Control the snake to eat food and grow longer. Avoid hitting the walls or yourself!
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('snake') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='snake') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Space Invaders -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-rocket"></i> Space Invaders
+                    </h5>
+                    <p class="card-text">
+                        Defend Earth from invading aliens. Shoot them down and avoid their attacks!
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('space_invaders') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='space_invaders') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pac-Man -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-ghost"></i> Pac-Man
+                    </h5>
+                    <p class="card-text">
+                        Navigate through the maze, eat dots, and avoid ghosts. Collect power pellets to fight back!
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('pacman') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='pacman') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

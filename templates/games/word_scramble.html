@@ -1,0 +1,154 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">How to Play Word Scramble</h5>
+            <div class="text-start">
+                <ol>
+                    <li>Select your difficulty level (Easy: 4-5 letters, Medium: 6-7 letters, Hard: 8+ letters)</li>
+                    <li>You'll see a scrambled word displayed on the screen</li>
+                    <li>Try to unscramble the letters to form the correct word</li>
+                    <li>Enter your guess in the input field and click Submit or press Enter</li>
+                    <li>You have 3 attempts to guess the word correctly</li>
+                    <li>After your first attempt, you'll get a hint showing the word length</li>
+                    <li>Score points by correctly guessing the word</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty:</label>
+        <select class="form-select" id="difficulty">
+            <option value="easy">Easy (4-5 letters)</option>
+            <option value="medium">Medium (6-7 letters)</option>
+            <option value="hard">Hard (8+ letters)</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <h4>Scrambled Word:</h4>
+        <div id="scrambled-word" class="display-4 mb-3"></div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="guess" class="form-label">Your Answer:</label>
+        <input type="text" class="form-control" id="guess" placeholder="Enter the correct word">
+    </div>
+    
+    <button id="submit-guess" class="btn btn-primary">
+        <i class="fas fa-check"></i> Submit Answer
+    </button>
+    
+    <div id="feedback" class="mt-3"></div>
+    <div id="attempts" class="mt-2">Attempts remaining: <span id="attempts-count">3</span></div>
+    <div id="hint" class="mt-2"></div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    const wordList = {
+        easy: ['CAT', 'DOG', 'BIRD', 'FISH', 'TREE', 'BOOK', 'STAR', 'MOON', 'SUN', 'SKY'],
+        medium: ['PENCIL', 'WINDOW', 'BRIDGE', 'FLOWER', 'GARDEN', 'RIVER', 'BEACH', 'CLOUD', 'STORM', 'SNAKE'],
+        hard: ['COMPUTER', 'ELEPHANT', 'BUTTERFLY', 'MOUNTAIN', 'OCEAN', 'UNIVERSE', 'PLANET', 'GALAXY', 'TELESCOPE', 'ASTRONAUT']
+    };
+
+    let currentWord = '';
+    let scrambledWord = '';
+    let attemptsLeft = 3;
+    let currentDifficulty = 'easy';
+
+    function scrambleWord(word) {
+        return word.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    function getRandomWord(difficulty) {
+        const words = wordList[difficulty];
+        return words[Math.floor(Math.random() * words.length)];
+    }
+
+    function initializeGame() {
+        currentDifficulty = document.getElementById('difficulty').value;
+        currentWord = getRandomWord(currentDifficulty);
+        scrambledWord = scrambleWord(currentWord);
+        
+        // Keep scrambling until we get a different word
+        while (scrambledWord === currentWord) {
+            scrambledWord = scrambleWord(currentWord);
+        }
+        
+        document.getElementById('scrambled-word').textContent = scrambledWord;
+        document.getElementById('attempts-count').textContent = attemptsLeft;
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('guess').value = '';
+        document.getElementById('hint').textContent = '';
+        document.getElementById('submit-guess').disabled = false;
+    }
+
+    function checkGuess() {
+        const guess = document.getElementById('guess').value.toUpperCase();
+        const feedback = document.getElementById('feedback');
+        
+        attemptsLeft--;
+        document.getElementById('attempts-count').textContent = attemptsLeft;
+        
+        if (guess === currentWord) {
+            feedback.textContent = 'Congratulations! You solved the word!';
+            feedback.className = 'mt-3 text-success';
+            updateScore(100);
+            saveScore();
+            document.getElementById('submit-guess').disabled = true;
+            return;
+        }
+        
+        if (attemptsLeft === 0) {
+            feedback.textContent = `Game Over! The word was ${currentWord}`;
+            feedback.className = 'mt-3 text-danger';
+            document.getElementById('submit-guess').disabled = true;
+            return;
+        }
+        
+        feedback.textContent = 'Try again!';
+        feedback.className = 'mt-3 text-warning';
+        
+        // Show hint after first attempt
+        if (attemptsLeft === 2) {
+            document.getElementById('hint').textContent = `Hint: The word has ${currentWord.length} letters`;
+            document.getElementById('hint').className = 'mt-2 text-info';
+        }
+    }
+
+    // Override the base game functions
+    window.startGame = function() {
+        attemptsLeft = 3;
+        initializeGame();
+    };
+
+    window.pauseGame = function() {
+        document.getElementById('submit-guess').disabled = true;
+    };
+
+    window.resetGame = function() {
+        attemptsLeft = 3;
+        initializeGame();
+    };
+
+    // Add event listeners
+    document.getElementById('difficulty').addEventListener('change', function() {
+        if (gameActive) {
+            initializeGame();
+        }
+    });
+
+    document.getElementById('submit-guess').addEventListener('click', checkGuess);
+    
+    document.getElementById('guess').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            checkGuess();
+        }
+    });
+</script>
+{% endblock %} 

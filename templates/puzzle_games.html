@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-puzzle-piece"></i> Puzzle Games
+    </h2>
+    
+    <div class="row">
+        <!-- Sliding Puzzle -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-arrows-alt"></i> Sliding Puzzle
+                    </h5>
+                    <p class="card-text">
+                        Arrange numbered tiles in order by sliding them into the empty space.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('sliding_puzzle') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='sliding_puzzle') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sudoku -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-th"></i> Sudoku
+                    </h5>
+                    <p class="card-text">
+                        Fill the grid with numbers so that each row, column, and box contains all digits from 1 to 9.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('sudoku') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='sudoku') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tetris -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-cubes"></i> Tetris
+                    </h5>
+                    <p class="card-text">
+                        Arrange falling blocks to create complete lines and clear the board.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('tetris') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='tetris') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Game Hub - Global Leaderboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    Global Leaderboard
+                </h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Game</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for score in scores %}
+                            <tr {% if current_user.is_authenticated and score.user.username == current_user.username %}class="table-primary"{% endif %}>
+                                <td>
+                                    {% if loop.index == 1 %}
+                                        <i class="fas fa-medal text-warning"></i>
+                                    {% elif loop.index == 2 %}
+                                        <i class="fas fa-medal text-secondary"></i>
+                                    {% elif loop.index == 3 %}
+                                        <i class="fas fa-medal text-danger"></i>
+                                    {% else %}
+                                        {{ loop.index }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ score.user.username }}</strong>
+                                    {% if current_user.is_authenticated and score.user.username == current_user.username %}
+                                        <span class="badge bg-primary">You</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ score.game_type.replace('_', ' ').title() }}</td>
+                                <td>{{ score.score }}</td>
+                                <td>{{ score.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Games
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Game Hub - Leaderboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-trophy text-warning"></i> 
+                        Game Leaderboards
+                    </h2>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary active" data-filter="all">All Games</button>
+                        <button class="btn btn-outline-primary" data-filter="number-guessing">Number Guessing</button>
+                        <button class="btn btn-outline-primary" data-filter="word-scramble">Word Scramble</button>
+                        <button class="btn btn-outline-primary" data-filter="hangman">Hangman</button>
+                        <button class="btn btn-outline-primary" data-filter="word-search">Word Search</button>
+                        <button class="btn btn-outline-primary" data-filter="crossword">Crossword</button>
+                        <button class="btn btn-outline-primary" data-filter="anagrams">Anagrams</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for game_type, scores in leaderboards.items() %}
+                    <div class="leaderboard-section mb-4" data-game="{{ game_type }}">
+                        <h3 class="mb-3">
+                            {% if game_type == 'number-guessing' %}
+                                <i class="fas fa-calculator"></i> Number Guessing
+                            {% elif game_type == 'word-scramble' %}
+                                <i class="fas fa-random"></i> Word Scramble
+                            {% elif game_type == 'hangman' %}
+                                <i class="fas fa-hangman"></i> Hangman
+                            {% elif game_type == 'word-search' %}
+                                <i class="fas fa-search"></i> Word Search
+                            {% elif game_type == 'crossword' %}
+                                <i class="fas fa-puzzle-piece"></i> Crossword
+                            {% elif game_type == 'anagrams' %}
+                                <i class="fas fa-font"></i> Anagrams
+                            {% endif %}
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Player</th>
+                                        <th>Score</th>
+                                        <th>Date</th>
+                                        <th>Difficulty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for score in scores %}
+                                    <tr {% if score.player == current_user.username %}class="table-primary"{% endif %}>
+                                        <td>
+                                            {% if loop.index <= 3 %}
+                                                <i class="fas fa-medal text-{{ ['gold', 'silver', 'bronze'][loop.index-1] }}"></i>
+                                            {% else %}
+                                                {{ loop.index }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ score.player }}</strong>
+                                            {% if score.player == current_user.username %}
+                                                <span class="badge bg-primary">You</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ score.score }}</td>
+                                        <td>{{ score.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ {
+                                                'easy': 'success',
+                                                'medium': 'warning',
+                                                'hard': 'danger'
+                                            }[score.difficulty] }}">
+                                                {{ score.difficulty.title() }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.btn-group .btn');
+    const leaderboardSections = document.querySelectorAll('.leaderboard-section');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.getAttribute('data-filter');
+
+            // Show/hide sections based on filter
+            leaderboardSections.forEach(section => {
+                if (filter === 'all' || section.getAttribute('data-game') === filter) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

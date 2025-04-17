@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Coligame - Home{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4">Welcome to Coligame</h1>
+    <p class="lead">Choose your favorite game category and start playing!</p>
+</div>
+
+<div class="row">
+    <!-- Word Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-font game-icon"></i>
+            <h3>Word Games</h3>
+            <p>Test your vocabulary and word skills</p>
+            <a href="{{ url_for('word_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Card Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-playing-card game-icon"></i>
+            <h3>Card Games</h3>
+            <p>Classic card games for everyone</p>
+            <a href="{{ url_for('card_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Puzzle Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-puzzle-piece game-icon"></i>
+            <h3>Puzzle Games</h3>
+            <p>Challenge your mind with puzzles</p>
+            <a href="{{ url_for('puzzle_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Arcade Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-joystick game-icon"></i>
+            <h3>Arcade Games</h3>
+            <p>Classic arcade-style games</p>
+            <a href="{{ url_for('arcade_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Board Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-chess game-icon"></i>
+            <h3>Board Games</h3>
+            <p>Traditional board games online</p>
+            <a href="{{ url_for('board_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Quiz Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-question-circle game-icon"></i>
+            <h3>Quiz Games</h3>
+            <p>Test your knowledge</p>
+            <a href="{{ url_for('quiz_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Adventure Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-mountain game-icon"></i>
+            <h3>Adventure Games</h3>
+            <p>Embark on exciting adventures</p>
+            <a href="{{ url_for('adventure_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Educational Games -->
+    <div class="col-md-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-graduation-cap game-icon"></i>
+            <h3>Educational Games</h3>
+            <p>Learn while you play</p>
+            <a href="{{ url_for('educational_games') }}" class="btn btn-primary">Play Now</a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Global Leaderboard</h5>
+                <p class="card-text">Check out the top players across all games!</p>
+                <a href="{{ url_for('global_leaderboard') }}" class="btn btn-primary">View Leaderboard</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Your Profile</h5>
+                <p class="card-text">Track your progress and achievements!</p>
+                <a href="{{ url_for('profile') }}" class="btn btn-primary">View Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-graduation-cap"></i> Educational Games
+    </h2>
+    
+    <div class="row">
+        <!-- Spelling Bee -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-spell-check"></i> Spelling Bee
+                    </h5>
+                    <p class="card-text">
+                        Improve your spelling skills. Listen to words and spell them correctly.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('spelling_bee') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='spelling_bee') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geography Quiz -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-globe-americas"></i> Geography Quiz
+                    </h5>
+                    <p class="card-text">
+                        Learn about countries, capitals, flags, and geographical features.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('geography_quiz') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='geography_quiz') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Science Quiz -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-flask"></i> Science Quiz
+                    </h5>
+                    <p class="card-text">
+                        Test your knowledge of physics, chemistry, biology, and astronomy.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('science_quiz') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='science_quiz') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

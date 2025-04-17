@@ -1,0 +1,147 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="mb-3">
+        <label class="form-label">Words Remaining:</label>
+        <h3 id="wordsRemaining">10</h3>
+    </div>
+    <div id="gameContainer" class="card">
+        <div class="card-body">
+            <div class="mb-4">
+                <h5>Listen to the word:</h5>
+                <button class="btn btn-primary mb-3" id="playWord">
+                    <i class="fas fa-volume-up"></i> Play Word
+                </button>
+                <div class="mb-3">
+                    <input type="text" class="form-control form-control-lg" id="spellingInput" 
+                           placeholder="Type your answer here" autocomplete="off">
+                </div>
+                <button class="btn btn-success" id="submitSpelling">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+            </div>
+            <div id="feedback" class="mt-3">
+                <!-- Feedback will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    const words = [
+        { word: "computer", difficulty: "easy" },
+        { word: "elephant", difficulty: "easy" },
+        { word: "umbrella", difficulty: "easy" },
+        { word: "butterfly", difficulty: "medium" },
+        { word: "chocolate", difficulty: "medium" },
+        { word: "mountain", difficulty: "medium" },
+        { word: "adventure", difficulty: "hard" },
+        { word: "knowledge", difficulty: "hard" },
+        { word: "beautiful", difficulty: "hard" },
+        { word: "wonderful", difficulty: "hard" }
+    ];
+
+    let currentWord = null;
+    let wordsRemaining = 10;
+    let shuffledWords = [];
+    let speechSynthesis = window.speechSynthesis;
+
+    function startGame() {
+        // Reset game state
+        wordsRemaining = 10;
+        updateScore(0);
+        
+        // Shuffle words
+        shuffledWords = [...words].sort(() => Math.random() - 0.5);
+        
+        // Get next word
+        getNextWord();
+    }
+
+    function getNextWord() {
+        if (shuffledWords.length === 0) {
+            alert(`Game Over! Your score: ${currentScore}`);
+            saveScore(currentScore, document.getElementById('difficulty').value);
+            gameStarted = false;
+            document.getElementById('startGame').disabled = false;
+            document.getElementById('difficulty').disabled = false;
+            return;
+        }
+
+        currentWord = shuffledWords.pop();
+        document.getElementById('wordsRemaining').textContent = wordsRemaining--;
+        document.getElementById('spellingInput').value = '';
+        document.getElementById('feedback').innerHTML = '';
+        document.getElementById('spellingInput').focus();
+    }
+
+    function speakWord(word) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        speechSynthesis.speak(utterance);
+    }
+
+    function checkSpelling() {
+        const input = document.getElementById('spellingInput').value.toLowerCase();
+        const feedback = document.getElementById('feedback');
+        
+        if (input === currentWord.word.toLowerCase()) {
+            // Correct spelling
+            const score = currentWord.difficulty === 'easy' ? 10 : 
+                         currentWord.difficulty === 'medium' ? 15 : 20;
+            updateScore(currentScore + score);
+            
+            feedback.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Correct! Well done!
+                </div>
+            `;
+            
+            setTimeout(() => {
+                getNextWord();
+            }, 1500);
+        } else {
+            // Incorrect spelling
+            feedback.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle"></i> Incorrect. The correct spelling is: ${currentWord.word}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                getNextWord();
+            }, 2000);
+        }
+    }
+
+    // Event listeners
+    document.getElementById('playWord').addEventListener('click', () => {
+        if (currentWord) {
+            speakWord(currentWord.word);
+        }
+    });
+
+    document.getElementById('submitSpelling').addEventListener('click', checkSpelling);
+
+    document.getElementById('spellingInput').addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            checkSpelling();
+        }
+    });
+</script>
+
+<style>
+#spellingInput {
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+#feedback .alert {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %} 

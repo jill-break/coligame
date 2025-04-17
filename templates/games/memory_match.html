@@ -1,0 +1,141 @@
+{% extends "games/game_base.html" %}
+
+{% block game_content %}
+<div class="text-center mb-4">
+    <div class="mb-3">
+        <label class="form-label">Attempts Remaining:</label>
+        <h3 id="attempts">20</h3>
+    </div>
+    <div id="gameBoard" class="d-flex flex-wrap justify-content-center gap-2">
+        <!-- Cards will be dynamically added here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let attempts = 20;
+    const emojis = ['🎮', '🎲', '🎯', '🎨', '🎭', '🎪', '🎟️', '🎠', '🎡', '🎢', '🎣', '🎤'];
+    let gameInterval;
+
+    function startGame() {
+        // Reset game state
+        cards = [];
+        flippedCards = [];
+        matchedPairs = 0;
+        attempts = 20;
+        document.getElementById('attempts').textContent = attempts;
+        updateScore(0);
+        
+        // Create card pairs
+        const selectedEmojis = emojis.slice(0, 6);
+        const cardPairs = [...selectedEmojis, ...selectedEmojis];
+        
+        // Shuffle cards
+        for (let i = cardPairs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cardPairs[i], cardPairs[j]] = [cardPairs[j], cardPairs[i]];
+        }
+        
+        // Create card elements
+        const gameBoard = document.getElementById('gameBoard');
+        gameBoard.innerHTML = '';
+        
+        cardPairs.forEach((emoji, index) => {
+            const card = document.createElement('div');
+            card.className = 'card game-card';
+            card.style.width = '100px';
+            card.style.height = '100px';
+            card.style.cursor = 'pointer';
+            card.dataset.index = index;
+            card.dataset.emoji = emoji;
+            card.innerHTML = '<div class="card-body d-flex align-items-center justify-content-center">❓</div>';
+            card.addEventListener('click', () => flipCard(card));
+            gameBoard.appendChild(card);
+            cards.push(card);
+        });
+    }
+
+    function flipCard(card) {
+        if (flippedCards.length === 2 || card.classList.contains('matched')) return;
+        
+        card.classList.add('flipped');
+        card.querySelector('.card-body').textContent = card.dataset.emoji;
+        flippedCards.push(card);
+        
+        if (flippedCards.length === 2) {
+            attempts--;
+            document.getElementById('attempts').textContent = attempts;
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        const match = card1.dataset.emoji === card2.dataset.emoji;
+        
+        if (match) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            matchedPairs++;
+            updateScore(matchedPairs * 10);
+            
+            if (matchedPairs === 6) {
+                setTimeout(() => {
+                    alert('Congratulations! You won!');
+                    saveScore(currentScore, document.getElementById('difficulty').value);
+                    gameStarted = false;
+                    document.getElementById('startGame').disabled = false;
+                    document.getElementById('difficulty').disabled = false;
+                }, 500);
+            }
+        } else {
+            setTimeout(() => {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                card1.querySelector('.card-body').textContent = '❓';
+                card2.querySelector('.card-body').textContent = '❓';
+                flippedCards = [];
+                
+                if (attempts <= 0) {
+                    alert('Game Over! Try again!');
+                    saveScore(currentScore, document.getElementById('difficulty').value);
+                    gameStarted = false;
+                    document.getElementById('startGame').disabled = false;
+                    document.getElementById('difficulty').disabled = false;
+                }
+            }, 1000);
+        }
+    }
+</script>
+
+<style>
+.game-card {
+    transition: transform 0.3s;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+}
+
+.game-card:hover {
+    transform: scale(1.05);
+}
+
+.game-card.flipped {
+    background-color: #fff;
+    border-color: #007bff;
+}
+
+.game-card.matched {
+    background-color: #d4edda;
+    border-color: #28a745;
+    cursor: default;
+}
+
+.card-body {
+    font-size: 2rem;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Game Hub - Word Games{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4">Word Games</h1>
+    <p class="lead">Challenge your vocabulary and word skills!</p>
+</div>
+
+<div class="row">
+    <!-- Number Guessing Game -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-calculator game-icon"></i>
+            <h3>Number Guessing</h3>
+            <p>Classic number guessing game</p>
+            <div class="mt-3">
+                <a href="{{ url_for('number_guessing') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='number_guessing') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Scramble -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-random game-icon"></i>
+            <h3>Word Scramble</h3>
+            <p>Unscramble letters to form words</p>
+            <div class="mt-3">
+                <a href="{{ url_for('word_scramble') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='word_scramble') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hangman -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-hangman game-icon"></i>
+            <h3>Hangman</h3>
+            <p>Classic word guessing game</p>
+            <div class="mt-3">
+                <a href="{{ url_for('hangman') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='hangman') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Search -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-search game-icon"></i>
+            <h3>Word Search</h3>
+            <p>Find hidden words in a grid</p>
+            <div class="mt-3">
+                <a href="{{ url_for('word_search') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='word_search') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crossword Puzzle -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-puzzle-piece game-icon"></i>
+            <h3>Crossword Puzzle</h3>
+            <p>Interactive crossword puzzles</p>
+            <div class="mt-3">
+                <a href="{{ url_for('crossword') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='crossword') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anagrams -->
+    <div class="col-md-4 mb-4">
+        <div class="game-card p-4 text-center">
+            <i class="fas fa-random game-icon"></i>
+            <h3>Anagrams</h3>
+            <p>Rearrange letters to form words</p>
+            <div class="mt-3">
+                <a href="{{ url_for('anagrams') }}" class="btn btn-primary">Play Now</a>
+                <a href="{{ url_for('leaderboard', game_type='anagrams') }}" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Categories
+    </a>
+</div>
+{% endblock %} 

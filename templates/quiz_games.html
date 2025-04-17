@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        <i class="fas fa-question-circle"></i> Quiz Games
+    </h2>
+    
+    <div class="row">
+        <!-- General Knowledge Quiz -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-globe"></i> General Knowledge
+                    </h5>
+                    <p class="card-text">
+                        Test your knowledge across various subjects including history, science, and geography.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('general_knowledge') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='general_knowledge') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Math Quiz -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-calculator"></i> Math Quiz
+                    </h5>
+                    <p class="card-text">
+                        Solve math problems quickly. Test your arithmetic skills with increasing difficulty.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('math_quiz') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='math_quiz') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Word Quiz -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-book"></i> Word Quiz
+                    </h5>
+                    <p class="card-text">
+                        Test your vocabulary and word knowledge. Find synonyms, antonyms, and definitions.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('word_quiz') }}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Play Now
+                        </a>
+                        <a href="{{ url_for('leaderboard', game_type='word_quiz') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

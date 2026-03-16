@@ -1,0 +1,19 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center">
+    <div id="chess-board" class="d-inline-block border border-dark mb-4" style="width: 400px; height: 400px; background: #eee;">
+        <p class="py-5">Chess board visualization goes here.<br>(Integration with chess.js/chessboard.js recommended)</p>
+    </div>
+    <div class="alert alert-info">
+        This is a strategic placeholder for the Chess game.
+    </div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    window.startGame = function() { console.log("Chess game started"); };
+    window.resetGame = function() { console.log("Chess game reset"); };
+</script>
+{% endblock %}

@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    is_admin = db.Column(db.Boolean, default=False)
     scores = db.relationship('Score', backref='user', lazy=True)
 
 class Score(db.Model):
@@ -132,6 +133,22 @@ def adventure_games():
 def educational_games():
     return render_template('educational_games.html')
 
+@app.route('/play/<game_name>')
+@login_required
+def play_game(game_name):
+    # Search for game title in GAMES
+    title = game_name.replace('-', ' ').title()
+    for category_games in GAMES.values():
+        for game in category_games:
+            if game['name'] == game_name:
+                title = game['title']
+                break
+                
+    template_path = f'games/{game_name.replace("-", "_")}.html'
+    return render_template(template_path, 
+                         game_name=title,
+                         game_type=game_name)
+
 # Individual Game Routes
 @app.route('/games/number-guessing')
 @login_required
@@ -226,11 +243,18 @@ def profile():
     
     # Get game statistics
     game_stats = []
-    for game_type in ['memory_match', 'snake', 'tic_tac_toe', 'general_knowledge', 'text_adventure', 'spelling_bee']:
+    
+    # Flatten all games from categories for stats calculation
+    all_game_types = []
+    for games in GAMES.values():
+        for game in games:
+            all_game_types.append(game['name'])
+            
+    for game_type in all_game_types:
         scores = Score.query.filter_by(user_id=current_user.id, game_type=game_type).all()
         if scores:
             game_stats.append({
-                'game_name': game_type.replace('_', ' ').title(),
+                'game_name': game_type.replace('_', ' ').replace('-', ' ').title(),
                 'games_played': len(scores),
                 'high_score': max(score.score for score in scores),
                 'average_score': sum(score.score for score in scores) / len(scores)
@@ -535,31 +559,46 @@ def get_suggestion(id):
 # Game data structure
 GAMES = {
     'card': [
-        {'name': 'memory_match', 'title': 'Memory Match', 'description': 'Test your memory by matching pairs of cards'},
+        {'name': 'memory-match', 'title': 'Memory Match', 'description': 'Test your memory by matching pairs of cards'},
         {'name': 'solitaire', 'title': 'Solitaire', 'description': 'Classic card game of patience'},
         {'name': 'blackjack', 'title': 'Blackjack', 'description': 'Try your luck against the dealer'}
     ],
     'arcade': [
         {'name': 'snake', 'title': 'Snake', 'description': 'Classic snake game with modern graphics'},
+        {'name': 'space-invaders', 'title': 'Space Invaders', 'description': 'Protect Earth from invading aliens'},
+        {'name': 'pacman', 'title': 'Pac-Man', 'description': 'Classic maze-chase game'},
         {'name': 'tetris', 'title': 'Tetris', 'description': 'Arrange falling blocks to clear lines'}
     ],
     'board': [
-        {'name': 'tic_tac_toe', 'title': 'Tic Tac Toe', 'description': 'Classic two-player game'},
-        {'name': 'chess', 'title': 'Chess', 'description': 'Strategic board game for two players'}
+        {'name': 'tic-tac-toe', 'title': 'Tic Tac Toe', 'description': 'Classic two-player game'},
+        {'name': 'chess', 'title': 'Chess', 'description': 'Strategic board game for two players'},
+        {'name': 'checkers', 'title': 'Checkers', 'description': 'Classic jumping game'},
+        {'name': 'sliding-puzzle', 'title': 'Sliding Puzzle', 'description': 'Arrange tiles in order'}
     ],
     'puzzle': [
-        {'name': 'sliding_puzzle', 'title': 'Sliding Puzzle', 'description': 'Arrange tiles in order'},
-        {'name': 'word_search', 'title': 'Word Search', 'description': 'Find hidden words in a grid'}
+        {'name': 'sudoku', 'title': 'Sudoku', 'description': 'Logic-based number-placement puzzle'},
+        {'name': 'word-search', 'title': 'Word Search', 'description': 'Find hidden words in a grid'},
+        {'name': 'crossword', 'title': 'Crossword', 'description': 'Complete the grid with interlocking words'},
+        {'name': 'anagrams', 'title': 'Anagrams', 'description': 'Form words from scrambled letters'}
     ],
     'quiz': [
-        {'name': 'general_knowledge', 'title': 'General Knowledge', 'description': 'Test your knowledge across various subjects'},
-        {'name': 'math_quiz', 'title': 'Math Quiz', 'description': 'Challenge yourself with mathematical problems'}
+        {'name': 'general-knowledge', 'title': 'General Knowledge', 'description': 'Test your knowledge across various subjects'},
+        {'name': 'math-quiz', 'title': 'Math Quiz', 'description': 'Challenge yourself with mathematical problems'},
+        {'name': 'word-quiz', 'title': 'Word Quiz', 'description': 'Test your vocabulary and word skills'}
     ],
     'adventure': [
-        {'name': 'text_adventure', 'title': 'Text Adventure', 'description': 'Embark on an interactive story adventure'}
+        {'name': 'text-adventure', 'title': 'Text Adventure', 'description': 'Embark on an interactive story adventure'},
+        {'name': 'treasure-hunt', 'title': 'Treasure Hunt', 'description': 'Find hidden treasures in a virtual world'},
+        {'name': 'escape-room', 'title': 'Escape Room', 'description': 'Solve puzzles to escape from a locked room'}
     ],
     'educational': [
-        {'name': 'spelling_bee', 'title': 'Spelling Bee', 'description': 'Improve your spelling skills'}
+        {'name': 'spelling-bee', 'title': 'Spelling Bee', 'description': 'Improve your spelling skills'},
+        {'name': 'geography-quiz', 'title': 'Geography Quiz', 'description': 'Test your knowledge of world geography'},
+        {'name': 'science-quiz', 'title': 'Science Quiz', 'description': 'Challenge yourself with scientific questions'}
+    ],
+    'word': [
+        {'name': 'word-scramble', 'title': 'Word Scramble', 'description': 'Unscramble words as fast as you can'},
+        {'name': 'hangman', 'title': 'Hangman', 'description': 'Guess the secret word before it\'s too late'}
     ]
 }
 
@@ -609,8 +648,8 @@ def home():
                              recent_games=recent_games,
                              high_scores=high_scores,
                              user_rank=user_rank,
-                             games=GAMES)
-    return render_template('home.html', games=GAMES)
+                             categories=GAMES)
+    return render_template('home.html', categories=GAMES)
 
 if __name__ == '__main__':
     with app.app_context():

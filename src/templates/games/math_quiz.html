@@ -1,0 +1,79 @@
+{% extends "game_base.html" %}
+
+{% block game_content %}
+<div class="text-center">
+    <div id="quiz-container" class="mb-4">
+        <h2 id="question" class="mb-4">Click Start to begin!</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <input type="number" id="answer" class="form-control form-control-lg mb-3" placeholder="Your answer">
+                <button id="submit-answer" class="btn btn-primary btn-lg w-100">Submit</button>
+            </div>
+        </div>
+    </div>
+    <div id="feedback" class="h4 mt-3"></div>
+</div>
+{% endblock %}
+
+{% block game_scripts %}
+<script>
+    let currentAnswer = 0;
+    
+    function generateQuestion() {
+        const ops = ['+', '-', '*'];
+        const op = ops[Math.floor(Math.random() * ops.length)];
+        let a, b;
+        
+        if (op === '*') {
+            a = Math.floor(Math.random() * 12) + 1;
+            b = Math.floor(Math.random() * 12) + 1;
+        } else {
+            a = Math.floor(Math.random() * 50) + 1;
+            b = Math.floor(Math.random() * 50) + 1;
+        }
+        
+        document.getElementById('question').textContent = `${a} ${op} ${b} = ?`;
+        currentAnswer = eval(`${a} ${op} ${b}`);
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').focus();
+    }
+    
+    function checkAnswer() {
+        if (!gameActive) return;
+        
+        const userAnswer = parseInt(document.getElementById('answer').value);
+        const feedback = document.getElementById('feedback');
+        
+        if (userAnswer === currentAnswer) {
+            feedback.textContent = "Correct! +10 points";
+            feedback.className = "h4 mt-3 text-success";
+            updateScore(10);
+            generateQuestion();
+        } else {
+            feedback.textContent = "Wrong! Try again.";
+            feedback.className = "h4 mt-3 text-danger";
+        }
+    }
+    
+    window.startGame = function() {
+        generateQuestion();
+        document.getElementById('feedback').textContent = "";
+    };
+    
+    window.pauseGame = function() {
+        document.getElementById('question').textContent = "Game Paused";
+    };
+    
+    window.resetGame = function() {
+        currentScore = 0;
+        updateScoreDisplay();
+        generateQuestion();
+        document.getElementById('feedback').textContent = "";
+    };
+    
+    document.getElementById('submit-answer').addEventListener('click', checkAnswer);
+    document.getElementById('answer').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+</script>
+{% endblock %}

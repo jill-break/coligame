@@ -18,18 +18,17 @@
                             <tr>
                                 <th>Rank</th>
                                 <th>Player</th>
-                                <th>Game</th>
-                                <th>Score</th>
-                                <th>Date</th>
+                                <th class="text-center">Games Played</th>
+                                <th class="text-end">Total Global Score</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for score in scores %}
-                            <tr {% if current_user.is_authenticated and score.user.username == current_user.username %}class="table-primary"{% endif %}>
+                            {% for entry in leaderboard %}
+                            <tr {% if current_user.is_authenticated and entry.user.username == current_user.username %}class="table-primary"{% endif %}>
                                 <td>
                                     {% if loop.index == 1 %}
                                         <i class="fas fa-medal text-warning"></i>
-                                    {% elif loop.index == 2 %}
+                                    |   {% elif loop.index == 2 %}
                                         <i class="fas fa-medal text-secondary"></i>
                                     {% elif loop.index == 3 %}
                                         <i class="fas fa-medal text-danger"></i>
@@ -38,14 +37,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <strong>{{ score.user.username }}</strong>
-                                    {% if current_user.is_authenticated and score.user.username == current_user.username %}
-                                        <span class="badge bg-primary">You</span>
+                                    <strong>{{ entry.user.username }}</strong>
+                                    {% if current_user.is_authenticated and entry.user.username == current_user.username %}
+                                        <span class="badge bg-primary ms-1">You</span>
                                     {% endif %}
+                                    <div class="small text-muted">Member since {{ entry.user.created_at.strftime('%b %Y') if entry.user.created_at else 'Unknown' }}</div>
                                 </td>
-                                <td>{{ score.game_type.replace('_', ' ').title() }}</td>
-                                <td>{{ score.score }}</td>
-                                <td>{{ score.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="text-center">{{ entry.games_played }}</td>
+                                <td class="text-end fw-bold">{{ entry.total_score }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

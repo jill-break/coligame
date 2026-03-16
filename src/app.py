@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     scores = db.relationship('Score', backref='user', lazy=True)
 
 class Score(db.Model):
@@ -219,12 +220,37 @@ def leaderboard():
                          leaderboards=leaderboards,
                          current_user=current_user)
 
+def get_global_leaderboard():
+    # Calculate sum of high scores across all game types for each user
+    # Logic: For each user, find their max score for each game_type, then sum those maxes
+    users = User.query.all()
+    leaderboard_data = []
+    
+    for user in users:
+        # Subquery to get max score per game_type for this user
+        high_scores = db.session.query(
+            Score.game_type,
+            func.max(Score.score).label('max_score')
+        ).filter_by(user_id=user.id).group_by(Score.game_type).all()
+        
+        total_score = sum(s.max_score for s in high_scores)
+        games_played = len(high_scores)
+        
+        if games_played > 0:
+            leaderboard_data.append({
+                'user': user,
+                'total_score': total_score,
+                'games_played': games_played
+            })
+    
+    # Sort by total score descending
+    leaderboard_data.sort(key=lambda x: x['total_score'], reverse=True)
+    return leaderboard_data
+
 @app.route('/global-leaderboard')
 def global_leaderboard():
-    scores = Score.query.order_by(Score.score.desc())\
-        .limit(20)\
-        .all()
-    return render_template('global_leaderboard.html', scores=scores)
+    leaderboard_data = get_global_leaderboard()
+    return render_template('global_leaderboard.html', leaderboard=leaderboard_data)
 
 @app.route('/profile')
 @login_required
@@ -233,10 +259,13 @@ def profile():
     total_games = Score.query.filter_by(user_id=current_user.id).count()
     high_score = db.session.query(func.max(Score.score)).filter_by(user_id=current_user.id).scalar() or 0
     
-    # Get user rank
-    user_rank = db.session.query(func.count(Score.id) + 1).filter(
-        Score.score > db.session.query(func.max(Score.score)).filter_by(user_id=current_user.id)
-    ).scalar()
+    # Get global rank
+    leaderboard = get_global_leaderboard()
+    user_rank = "Unranked"
+    for i, entry in enumerate(leaderboard):
+        if entry['user'].id == current_user.id:
+            user_rank = i + 1
+            break
     
     # Get game statistics
     game_stats = []
@@ -254,17 +283,17 @@ def profile():
                 'game_name': game_type.replace('_', ' ').replace('-', ' ').title(),
                 'games_played': len(scores),
                 'high_score': max(score.score for score in scores),
-                'average_score': sum(score.score for score in scores) / len(scores)
+                'average_score': round(sum(score.score for score in scores) / len(scores), 1)
             })
     
     # Get recent activity
     recent_activity = []
-    recent_scores = Score.query.filter_by(user_id=current_user.id).order_by(Score.timestamp.desc()).limit(5).all()
+    recent_scores = Score.query.filter_by(user_id=current_user.id).order_by(Score.timestamp.desc()).limit(10).all()
     
     for score in recent_scores:
         recent_activity.append({
             'icon': 'trophy' if score.score > 50 else 'star',
-            'text': f"Scored {score.score} points in {score.game_type.replace('_', ' ').title()}",
+            'text': f"Scored {score.score} points in {score.game_type.replace('_', ' ').replace('-', ' ').title()}",
             'timestamp': score.timestamp.strftime('%Y-%m-%d %H:%M')
         })
     
@@ -272,7 +301,7 @@ def profile():
     achievements = [
         {
             'name': 'First Victory',
-            'description': 'Win your first game',
+            'description': 'Play your first game',
             'icon': 'medal',
             'unlocked': total_games > 0
         },
@@ -284,21 +313,15 @@ def profile():
         },
         {
             'name': 'Dedicated Player',
-            'description': 'Play 50 games',
+            'description': 'Play 10 games',
             'icon': 'gamepad',
-            'unlocked': total_games >= 50
+            'unlocked': total_games >= 10
         },
         {
             'name': 'Master of All',
-            'description': 'Play every game type',
+            'description': 'Play at least 5 different game types',
             'icon': 'crown',
-            'unlocked': len(game_stats) >= 6
-        },
-        {
-            'name': 'Perfect Score',
-            'description': 'Get a perfect score in any game',
-            'icon': 'trophy',
-            'unlocked': high_score >= 1000
+            'unlocked': len(game_stats) >= 5
         }
     ]
     
@@ -635,18 +658,23 @@ def home():
         ).filter_by(user_id=current_user.id)\
         .group_by(Score.game_type).all()
         
-        # Get user's rank
-        user_rank = db.session.query(func.count(Score.id) + 1).filter(
-            Score.score > db.session.query(func.max(Score.score))
-            .filter_by(user_id=current_user.id)
-        ).scalar()
+        # Get global rank using aggregated scores
+        leaderboard = get_global_leaderboard()
+        user_rank = "Unranked"
+        for i, entry in enumerate(leaderboard):
+            if entry['user'].id == current_user.id:
+                user_rank = i + 1
+                break
         
         return render_template('home.html',
                              recent_games=recent_games,
                              high_scores=high_scores,
                              user_rank=user_rank,
-                             categories=GAMES)
-    return render_template('home.html', categories=GAMES)
+                             categories=GAMES,
+                             top_players=leaderboard[:5])
+    
+    leaderboard = get_global_leaderboard()
+    return render_template('home.html', categories=GAMES, top_players=leaderboard[:5])
 
 if __name__ == '__main__':
     with app.app_context():

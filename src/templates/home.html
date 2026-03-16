@@ -2,6 +2,33 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Top Global Players Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0 text-primary">
+                            <i class="fas fa-crown text-warning me-2"></i>Top Global Players
+                        </h3>
+                        <a href="{{ url_for('global_leaderboard') }}" class="btn btn-sm btn-outline-primary">View Full Board</a>
+                    </div>
+                    <div class="row text-center">
+                        {% for entry in top_players %}
+                        <div class="col">
+                            <div class="p-2 border rounded bg-white">
+                                <div class="small fw-bold text-truncate">{{ entry.user.username }}</div>
+                                <div class="h5 mb-0 text-success">{{ entry.total_score }}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">{{ entry.games_played }} games</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Search Section -->
     <div class="search-section mb-5">
         <div class="row justify-content-center">

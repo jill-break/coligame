@@ -49,10 +49,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Routes
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -90,7 +86,7 @@ def login():
         
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         
         flash('Invalid username or password')
     return render_template('login.html')
@@ -99,7 +95,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
 
 # Game Category Routes
 @app.route('/word-games')

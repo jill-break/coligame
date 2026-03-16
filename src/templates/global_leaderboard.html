@@ -1,63 +1,98 @@
 {% extends "base.html" %}
 
-{% block title %}Game Hub - Global Leaderboard{% endblock %}
+{% block title %}Champions - Global Leaderboard{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">
-                    <i class="fas fa-trophy text-warning me-2"></i>
-                    Global Leaderboard
-                </h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="glass-card p-5 overflow-hidden position-relative">
+                <!-- Background Decoration -->
+                <div class="position-absolute top-0 end-0 p-5 mt-n5 me-n5 opacity-25">
+                    <i class="fas fa-trophy fa-10x text-warning"></i>
+                </div>
+
+                <div class="text-center mb-5 position-relative">
+                    <h1 class="display-4 fw-bold mb-2">Global <span class="text-gradient">Champions</span></h1>
+                    <p class="text-muted lead">The elite players across all game categories.</p>
+                </div>
                 
-                <div class="table-responsive">
-                    <table class="table table-hover">
+                <div class="table-responsive position-relative">
+                    <table class="table table-dark table-hover align-middle border-0 mb-0">
                         <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Player</th>
-                                <th class="text-center">Games Played</th>
-                                <th class="text-end">Total Global Score</th>
+                            <tr class="text-muted uppercase small tracking-wider border-bottom border-white border-opacity-10">
+                                <th class="py-3 px-4 border-0">Rank</th>
+                                <th class="py-3 border-0">Player</th>
+                                <th class="py-3 text-center border-0">Games</th>
+                                <th class="py-3 text-end px-4 border-0">Total Score</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-0">
                             {% for entry in leaderboard %}
-                            <tr {% if current_user.is_authenticated and entry.user.username == current_user.username %}class="table-primary"{% endif %}>
-                                <td>
+                            <tr class="border-bottom border-white border-opacity-5 {% if current_user.is_authenticated and entry.user.username == current_user.username %}bg-primary bg-opacity-10{% endif %}">
+                                <td class="py-4 px-4 border-0">
                                     {% if loop.index == 1 %}
-                                        <i class="fas fa-medal text-warning"></i>
-                                    |   {% elif loop.index == 2 %}
-                                        <i class="fas fa-medal text-secondary"></i>
+                                        <div class="rank-circle gold"><i class="fas fa-medal"></i></div>
+                                    {% elif loop.index == 2 %}
+                                        <div class="rank-circle silver"><i class="fas fa-medal"></i></div>
                                     {% elif loop.index == 3 %}
-                                        <i class="fas fa-medal text-danger"></i>
+                                        <div class="rank-circle bronze"><i class="fas fa-medal"></i></div>
                                     {% else %}
-                                        {{ loop.index }}
+                                        <span class="ms-3 fw-bold text-muted">{{ loop.index }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <strong>{{ entry.user.username }}</strong>
-                                    {% if current_user.is_authenticated and entry.user.username == current_user.username %}
-                                        <span class="badge bg-primary ms-1">You</span>
-                                    {% endif %}
-                                    <div class="small text-muted">Member since {{ entry.user.created_at.strftime('%b %Y') if entry.user.created_at else 'Unknown' }}</div>
+                                <td class="py-4 border-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3 bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center">
+                                            <span class="fw-bold">{{ entry.user.username[0].upper() }}</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold fs-5">{{ entry.user.username }}</div>
+                                            <div class="small text-muted">Joined {{ entry.user.created_at.strftime('%b %Y') if entry.user.created_at else 'Legacy' }}</div>
+                                        </div>
+                                        {% if current_user.is_authenticated and entry.user.username == current_user.username %}
+                                            <span class="badge rounded-pill bg-primary ms-3">YOU</span>
+                                        {% endif %}
+                                    </div>
                                 </td>
-                                <td class="text-center">{{ entry.games_played }}</td>
-                                <td class="text-end fw-bold">{{ entry.total_score }}</td>
+                                <td class="py-4 text-center border-0">
+                                    <span class="glass-card px-3 py-1 rounded-pill small">{{ entry.games_played }}</span>
+                                </td>
+                                <td class="py-4 text-end px-4 border-0">
+                                    <span class="fs-4 fw-bold text-gradient">{{ entry.total_score }}</span>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
-                <div class="text-center mt-4">
-                    <a href="{{ url_for('index') }}" class="btn btn-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Games
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('home') }}" class="btn-outline-modern px-5 py-3 text-white">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Hub
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+
+<style>
+.rank-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+.rank-circle.gold { background: linear-gradient(45deg, #ffd700, #ff8c00); color: white; }
+.rank-circle.silver { background: linear-gradient(45deg, #c0c0c0, #708090); color: white; }
+.rank-circle.bronze { background: linear-gradient(45deg, #cd7f32, #8b4513); color: white; }
+.bg-gradient-primary { background: var(--gradient-primary); color: white; }
+.avatar-sm { width: 40px; height: 40px; }
+.tracking-wider { letter-spacing: 0.1em; }
+</style>
+{% endblock %}

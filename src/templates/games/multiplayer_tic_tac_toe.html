@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Multiplayer Tic-Tac-Toe{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="glass-card p-5 max-w-lg mx-auto">
+        <h1 class="text-gradient mb-4">Multiplayer Tic-Tac-Toe</h1>
+        
+        <div id="game-info" class="mb-4">
+            <div id="status" class="h4 mb-2">Connecting...</div>
+            <div id="room-info" class="text-muted">Room: <span id="room-id">...</span></div>
+        </div>
+
+        <div class="ttt-grid d-grid gap-2" style="grid-template-columns: repeat(3, 1fr); width: 300px; margin: 0 auto;">
+            {% for i in range(9) %}
+            <button class="ttt-cell glass-card border border-white border-opacity-10 d-flex align-items-center justify-content-center fs-1 fw-bold" 
+                    style="height: 100px; cursor: pointer;" data-index="{{ i }}"></button>
+            {% endfor %}
+        </div>
+
+        <button id="reset-btn" class="btn-modern mt-5 d-none">Play Again</button>
+    </div>
+</div>
+
+<style>
+.ttt-cell:hover { background: rgba(255, 255, 255, 0.1); }
+.ttt-cell.x { color: var(--primary); }
+.ttt-cell.o { color: var(--accent); }
+.ttt-cell:disabled { cursor: not-allowed; opacity: 0.8; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const socket = io();
+const cells = document.querySelectorAll('.ttt-cell');
+const statusDisplay = document.getElementById('status');
+const roomIdDisplay = document.getElementById('room-id');
+const resetBtn = document.getElementById('reset-btn');
+
+let symbol = null;
+let myTurn = false;
+let gameActive = true;
+let room = null;
+
+// Initial connection
+socket.on('connect', () => {
+    console.log('Connected to server!');
+    statusDisplay.textContent = "Searching for opponent...";
+    socket.emit('join_ttt');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    statusDisplay.textContent = "Connection failed. Please refresh.";
+});
+
+socket.on('joined', (data) => {
+    console.log('Joined room:', data);
+    room = data.room;
+    symbol = data.symbol;
+    roomIdDisplay.textContent = room;
+    statusDisplay.textContent = `You are ${symbol}. Waiting for opponent...`;
+});
+
+socket.on('start_game', (data) => {
+    statusDisplay.textContent = data.turn === symbol ? "Your turn!" : "Opponent's turn...";
+    myTurn = (data.turn === symbol);
+});
+
+socket.on('move_made', (data) => {
+    const cell = cells[data.index];
+    cell.textContent = data.symbol;
+    cell.classList.add(data.symbol.toLowerCase());
+    
+    if (data.next_turn === symbol) {
+        statusDisplay.textContent = "Your turn!";
+        myTurn = true;
+    } else {
+        statusDisplay.textContent = "Opponent's turn...";
+        myTurn = false;
+    }
+});
+
+socket.on('game_over', (data) => {
+    gameActive = false;
+    if (data.result === 'draw') {
+        statusDisplay.textContent = "It's a draw!";
+    } else {
+        statusDisplay.textContent = data.winner === symbol ? "You won! 🎉" : "You lost! 💀";
+    }
+    resetBtn.classList.remove('d-none');
+});
+
+cells.forEach(cell => {
+    cell.addEventListener('click', () => {
+        if (!myTurn || !gameActive || cell.textContent !== '') return;
+        
+        const index = cell.getAttribute('data-index');
+        socket.emit('make_move', { room: room, index: index, symbol: symbol });
+        myTurn = false;
+    });
+});
+
+resetBtn.addEventListener('click', () => {
+    location.reload();
+});
+</script>
+{% endblock %}

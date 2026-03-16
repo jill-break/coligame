@@ -79,6 +79,14 @@
                     </div>
                     <div class="flex-grow-1">
                         <ul class="list-unstyled mb-0">
+                            {% if category == 'board' %}
+                            <li class="mb-2">
+                                <a href="{{ url_for('multiplayer_ttt') }}" class="game-link border-primary bg-primary bg-opacity-10">
+                                    <span><i class="fas fa-users me-2"></i>Multiplayer Tic-Tac-Toe</span>
+                                    <i class="fas fa-play"></i>
+                                </a>
+                            </li>
+                            {% endif %}
                             {% for game in games %}
                             <li class="mb-2">
                                 <a href="{{ url_for('play_game', game_name=game.name) }}" class="game-link">

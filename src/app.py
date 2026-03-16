@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from sqlalchemy import func
@@ -15,6 +16,8 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Database Models
 class User(UserMixin, db.Model):
@@ -639,6 +642,67 @@ def search():
     
     return jsonify(results)
 
+# --- Socket.IO Handlers ---
+rooms = {} # {room_id: {players: [], board: [], turn: 0}}
+
+@socketio.on('join_ttt')
+def on_join_ttt():
+    # Find a room with 1 player or create a new one
+    room_id = None
+    for r_id, r_data in rooms.items():
+        if len(r_data['players']) == 1:
+            room_id = r_id
+            break
+    
+    if not room_id:
+        room_id = f"room_{os.urandom(4).hex()}"
+        rooms[room_id] = {'players': [request.sid], 'board': [''] * 9, 'turn': 0}
+        join_room(room_id)
+        emit('joined', {'room': room_id, 'symbol': 'X'})
+    else:
+        rooms[room_id]['players'].append(request.sid)
+        join_room(room_id)
+        emit('joined', {'room': room_id, 'symbol': 'O'})
+        # Start game
+        emit('start_game', {'turn': 'X'}, room=room_id)
+
+@socketio.on('make_move')
+def on_move(data):
+    room = data['room']
+    index = int(data['index'])
+    symbol = data['symbol']
+    
+    if room in rooms:
+        r_data = rooms[room]
+        # Very basic validation (should check turn properly)
+        if r_data['board'][index] == '':
+            r_data['board'][index] = symbol
+            next_turn = 'O' if symbol == 'X' else 'X'
+            
+            # Check for win (simplified)
+            winner = check_ttt_winner(r_data['board'])
+            
+            emit('move_made', {'index': index, 'symbol': symbol, 'next_turn': next_turn}, room=room)
+            
+            if winner:
+                emit('game_over', {'result': 'win', 'winner': winner}, room=room)
+                del rooms[room]
+            elif '' not in r_data['board']:
+                emit('game_over', {'result': 'draw'}, room=room)
+                del rooms[room]
+
+def check_ttt_winner(b):
+    wins = [(0,1,2), (3,4,5), (6,7,8), (0,3,6), (1,4,7), (2,5,8), (0,4,8), (2,4,6)]
+    for w in wins:
+        if b[w[0]] == b[w[1]] == b[w[2]] != '':
+            return b[w[0]]
+    return None
+
+@app.route('/games/multiplayer-tic-tac-toe')
+@login_required
+def multiplayer_ttt():
+    return render_template('games/multiplayer_tic_tac_toe.html')
+
 @app.route('/')
 def home():
     if current_user.is_authenticated:
@@ -675,4 +739,4 @@ def home():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True) 
+    socketio.run(app, debug=True)

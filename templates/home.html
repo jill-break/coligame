@@ -86,8 +86,8 @@
                     <ul class="list-unstyled">
                         {% for game in games %}
                         <li>
-                            <a href="{{ url_for('play_game', game=game) }}" class="game-link">
-                                {{ game.replace('_', ' ').title() }}
+                            <a href="{{ url_for('play_game', game_name=game.name) }}" class="game-link">
+                                {{ game.title }}
                             </a>
                         </li>
                         {% endfor %}
